@@ -1,0 +1,153 @@
+<div style="max-width:700px;margin:0 auto;">
+
+  <div class="card">
+    <div class="card-header-custom">
+      <div class="header-icon" style="background:rgba(139,148,158,.12);color:var(--text-muted);">
+        <i class="bi bi-bar-chart-line"></i>
+      </div>
+      <h4>Reportes</h4>
+    </div>
+    <div class="p-3" style="display:flex;flex-direction:column;gap:.75rem;">
+
+      <!-- Corte diario -->
+      <div class="report-card">
+        <div class="report-icon" style="background:rgba(35,134,54,.12);color:var(--accent);">
+          <i class="bi bi-file-earmark-pdf"></i>
+        </div>
+        <div class="flex-grow-1">
+          <div class="report-title">Corte Diario</div>
+          <div class="report-desc">Resumen de ventas del día actual.</div>
+        </div>
+        <button onclick="rptDaily()" class="btn btn-outline-secondary btn-sm rpt-btn">
+          <i class="bi bi-download me-1"></i>PDF
+        </button>
+      </div>
+
+      <!-- Reporte semanal -->
+      <div class="report-card">
+        <div class="report-icon" style="background:rgba(56,139,253,.12);color:var(--info);">
+          <i class="bi bi-calendar-week"></i>
+        </div>
+        <div class="flex-grow-1">
+          <div class="report-title">Reporte Semanal</div>
+          <div class="report-desc">Ventas de la semana actual (lunes a domingo).</div>
+        </div>
+        <button onclick="rptWeekly()" class="btn btn-outline-secondary btn-sm rpt-btn">
+          <i class="bi bi-download me-1"></i>PDF
+        </button>
+      </div>
+
+      <!-- Reporte mensual -->
+      <div class="report-card">
+        <div class="report-icon" style="background:rgba(210,153,34,.12);color:var(--warning);">
+          <i class="bi bi-calendar-month"></i>
+        </div>
+        <div class="flex-grow-1">
+          <div class="report-title">Reporte Mensual</div>
+          <div class="report-desc">Ventas del mes en curso.</div>
+        </div>
+        <button onclick="rptMonthly()" class="btn btn-outline-secondary btn-sm rpt-btn">
+          <i class="bi bi-download me-1"></i>PDF
+        </button>
+      </div>
+
+      <!-- Bajo stock -->
+      <div class="report-card">
+        <div class="report-icon" style="background:rgba(218,54,51,.12);color:var(--danger);">
+          <i class="bi bi-exclamation-triangle"></i>
+        </div>
+        <div class="flex-grow-1">
+          <div class="report-title">Alerta Bajo Stock</div>
+          <div class="report-desc">Productos con 10 unidades o menos en inventario.</div>
+        </div>
+        <button onclick="rptLowStock()" class="btn btn-outline-secondary btn-sm rpt-btn">
+          <i class="bi bi-download me-1"></i>PDF
+        </button>
+      </div>
+
+      <!-- Ticket por venta -->
+      <div class="report-card" style="flex-wrap:wrap;gap:.75rem;">
+        <div class="report-icon" style="background:rgba(56,139,253,.12);color:var(--info);">
+          <i class="bi bi-receipt"></i>
+        </div>
+        <div class="flex-grow-1">
+          <div class="report-title">Ticket por Venta</div>
+          <div class="report-desc">Ingresa el folio o ID de la venta.</div>
+          <div class="input-group mt-2" style="max-width:300px;">
+            <input id="ticket-id" type="text" class="form-control form-control-sm"
+                   placeholder="Folio o ID de venta"
+                   onkeydown="if(event.key==='Enter')rptTicket()">
+            <button onclick="rptTicket()" class="btn btn-outline-secondary btn-sm">
+              <i class="bi bi-search"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Configuración del negocio (solo ADMIN) -->
+  <div id="config-negocio" style="display:none;margin-top:1rem;">
+    <div class="card">
+      <div class="card-header-custom">
+        <div class="header-icon" style="background:rgba(56,139,253,.12);color:var(--info);">
+          <i class="bi bi-gear"></i>
+        </div>
+        <h4>Datos del Negocio</h4>
+        <span style="font-size:.75rem;color:var(--text-subtle);margin-left:.5rem;">Se aplican en todos los reportes y tickets</span>
+      </div>
+      <div class="p-3">
+        <div class="mb-3">
+          <label class="form-label" for="cfg-nombre">Nombre del negocio</label>
+          <input id="cfg-nombre" type="text" class="form-control" placeholder="Ej. ABARROTES LA CASETA">
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="cfg-direccion">Dirección</label>
+          <input id="cfg-direccion" type="text" class="form-control" placeholder="Calle, colonia…">
+        </div>
+        <div class="mb-4">
+          <label class="form-label" for="cfg-telefono">Teléfono</label>
+          <input id="cfg-telefono" type="text" class="form-control" placeholder="(000) 000-0000">
+        </div>
+        <button onclick="guardarConfig()" class="btn btn-primary">
+          <i class="bi bi-floppy me-1"></i>Guardar cambios
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="mt-3 px-3 py-2 d-flex align-items-center gap-2"
+       style="background:var(--surface-2);border:1px solid var(--border);
+              border-radius:var(--radius);font-size:.82rem;color:var(--text-muted);">
+    <i class="bi bi-calendar3" style="color:var(--text-subtle);"></i>
+    <span>Hoy: <strong id="today-date" style="color:var(--text);"></strong></span>
+  </div>
+
+</div>
+
+<style>
+.report-card {
+  display: flex;
+  align-items: center;
+  gap: .85rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: .85rem 1rem;
+}
+.report-icon {
+  width: 38px; height: 38px;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.05rem; flex-shrink: 0;
+}
+.report-title { font-weight: 600; font-size: .9rem; }
+.report-desc  { font-size: .8rem; color: var(--text-muted); margin-top: .1rem; }
+.rpt-btn      { white-space: nowrap; flex-shrink: 0; }
+</style>
+
+<script th:src="@{/js/reports.js}"></script>
+<script>
+document.getElementById("today-date").textContent = new Date().toLocaleDateString("es-MX",
+  { weekday:"long", year:"numeric", month:"long", day:"numeric" });
+</script>

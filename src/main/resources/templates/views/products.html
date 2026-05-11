@@ -1,0 +1,133 @@
+<div class="row g-3" style="max-width:960px;margin:0 auto;">
+
+  <!-- Left: form -->
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header-custom">
+        <div class="header-icon" style="background:rgba(210,153,34,.15);color:var(--warning);">
+          <i class="bi bi-plus-circle"></i>
+        </div>
+        <h4>Nuevo Producto</h4>
+      </div>
+      <div class="p-3">
+        <div class="mb-3">
+          <label class="form-label" for="pname">Nombre</label>
+          <input id="pname" type="text" class="form-control" placeholder="Nombre del producto">
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="pcode">Código</label>
+          <input id="pcode" type="text" class="form-control" placeholder="Código o clave">
+        </div>
+        <div class="mb-4">
+          <label class="form-label" for="pprice">Precio</label>
+          <div class="input-group">
+            <span class="input-group-text">$</span>
+            <input id="pprice" type="number" min="0" step="0.01" class="form-control" placeholder="0.00">
+          </div>
+        </div>
+        <button onclick="saveProduct()" class="btn btn-primary w-100">
+          <i class="bi bi-floppy me-1"></i>Guardar producto
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Right: list -->
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header-custom">
+        <div class="header-icon" style="background:rgba(210,153,34,.15);color:var(--warning);">
+          <i class="bi bi-box-seam"></i>
+        </div>
+        <h4>Inventario</h4>
+        <span id="prod-count" class="ms-auto text-subtle" style="font-size:.8rem;"></span>
+      </div>
+
+      <!-- Barra de búsqueda -->
+      <div class="px-3 pt-2 pb-1">
+        <div class="input-icon-wrap">
+          <i class="bi bi-search field-icon"></i>
+          <input id="prod-search" type="text" class="form-control form-control-sm"
+                 placeholder="Buscar por nombre…" oninput="onSearch(this.value)"
+                 style="padding-left:2.2rem;">
+        </div>
+      </div>
+
+      <!-- Estado de carga -->
+      <div id="prod-loading" class="text-center py-4" style="display:none;">
+        <span class="spinner-border spinner-border-sm me-2"
+              style="color:var(--text-subtle);"></span>
+        <span style="font-size:.85rem;color:var(--text-subtle);">Cargando…</span>
+      </div>
+
+      <!-- Tabla -->
+      <div id="prod-table-wrap" style="overflow-x:auto;display:none;">
+        <table class="table mb-0">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Código</th>
+              <th class="text-center">Stock</th>
+              <th class="text-end">Precio</th>
+              <th class="text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="plist"></tbody>
+        </table>
+      </div>
+
+      <!-- Estado vacío -->
+      <div id="prod-empty" class="empty-cart" style="display:none;">
+        <div class="empty-icon"><i class="bi bi-box"></i></div>
+        <div style="font-size:.85rem;">Sin resultados</div>
+      </div>
+
+      <!-- Paginación -->
+      <div id="prod-pagination" style="display:none;border-top:1px solid var(--border-soft);">
+        <div class="d-flex align-items-center justify-content-between px-3 py-2">
+          <span id="pag-info" style="font-size:.78rem;color:var(--text-subtle);"></span>
+          <nav>
+            <ul class="pagination pagination-sm mb-0" id="pag-controls" style="gap:.2rem;"></ul>
+          </nav>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal surtir -->
+<div id="modal-surtir" style="display:none;position:fixed;inset:0;z-index:1050;background:rgba(0,0,0,.55);"
+     onclick="if(event.target===this)cerrarSurtir()">
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+              width:100%;max-width:380px;background:var(--surface);
+              border:1px solid var(--border);border-radius:var(--radius);
+              box-shadow:var(--shadow);padding:1.5rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+      <h5 style="margin:0;font-size:1rem;">
+        <i class="bi bi-box-arrow-in-down me-2" style="color:var(--warning);"></i>Surtir producto
+      </h5>
+      <button onclick="cerrarSurtir()" style="background:none;border:none;color:var(--text-muted);
+              font-size:1.2rem;cursor:pointer;line-height:1;padding:.1rem .3rem;">&times;</button>
+    </div>
+    <p id="surtir-nombre" style="font-size:.9rem;font-weight:600;margin-bottom:.25rem;"></p>
+    <p id="surtir-stock-actual" style="font-size:.8rem;color:var(--text-subtle);margin-bottom:1rem;"></p>
+    <div class="mb-3">
+      <label class="form-label" for="surtir-cantidad">Stock correcto</label>
+      <input id="surtir-cantidad" type="number" min="0" step="1" class="form-control"
+             placeholder="0" onkeydown="if(event.key==='Enter')confirmarSurtir()">
+      <div style="font-size:.75rem;color:var(--text-subtle);margin-top:.3rem;">
+        Edita directamente el valor correcto
+      </div>
+    </div>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+      <button onclick="cerrarSurtir()" class="btn btn-outline-secondary btn-sm">Cancelar</button>
+      <button onclick="confirmarSurtir()" class="btn btn-primary btn-sm">
+        <i class="bi bi-check-lg me-1"></i>Confirmar
+      </button>
+    </div>
+  </div>
+</div>
+
+<script th:src="@{/js/products.js}"></script>

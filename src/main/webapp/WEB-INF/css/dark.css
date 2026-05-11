@@ -1,0 +1,24 @@
+/* Selector universal: aplica a TODO sin excepción */
+* {
+    color: #ffffff !important;
+}
+
+/* Corregir el fondo de los inputs porque el selector universal 
+   también pintaría el fondo de blanco si no tenemos cuidado */
+input, select, textarea, button {
+    background-color: #222222 !important;
+    color: #ffffff !important;
+    border: 1px solid #444 !important;
+}
+
+/* Especificidad para tablas de Bootstrap que suelen ser rebeldes */
+.table, .table > :not(caption) > * > * {
+    color: #ffffff !important;
+    --bs-table-color: #ffffff !important;
+    --bs-table-striped-color: #ffffff !important;
+}
+
+/* Navbar links */
+.navbar-brand, .nav-link {
+    color: #ffffff !important;
+}

@@ -1,0 +1,13 @@
+
+<script>requireRole("ADMIN")</script>
+<div class="card p-3">
+<h4>Usuarios</h4>
+<input id="uuser" class="form-control mb-2" placeholder="Usuario">
+<input id="upass" class="form-control mb-2" placeholder="Password">
+<select id="urole" class="form-control mb-2">
+<option>ADMIN</option>
+<option>CAJA</option>
+</select>
+<button onclick="saveUser()" class="btn btn-info">Crear</button>
+</div>
+<script src="js/users.js"></script>

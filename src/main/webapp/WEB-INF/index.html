@@ -1,0 +1,38 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>POS PRO</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="css/dark.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-dark">
+<div class="container-fluid">
+<span class="navbar-brand">POS PRO</span>
+<div>
+<button onclick="loadView('pos')" class="btn btn-sm btn-success">Venta</button>
+<button onclick="loadView('products')" class="btn btn-sm btn-warning">Productos</button>
+<button onclick="loadView('users')" class="btn btn-sm btn-info">Usuarios</button>
+<button onclick="loadView('reports')" class="btn btn-sm btn-secondary">Reportes</button>
+<button onclick="logout()" class="btn btn-sm btn-danger">Salir</button>
+</div>
+</div>
+</nav>
+
+<div id="app" class="container mt-3"></div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/auth.js"></script>
+
+<script>
+function loadView(v){ $("#app").load(v); }
+function logout(){ localStorage.clear(); window.location="login"; }
+loadView("pos");
+</script>
+
+</body>
+</html>

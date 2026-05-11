@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>POS PRO</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+<link th:href="@{/css/dark.css}" rel="stylesheet">
+<style>
+  #app { padding: 1.5rem; min-height: 100vh; }
+</style>
+</head>
+<body>
+
+<aside id="sidebar">
+  <div class="sidebar-brand">
+    <span class="brand-icon">&#128179;</span>
+    <div class="brand-text">
+      <div class="brand-name">POS PRO</div>
+      <div class="brand-sub">Punto de Venta</div>
+    </div>
+  </div>
+
+  <nav class="sidebar-nav">
+    <div class="sidebar-section">Menú</div>
+    <button id="nav-dashboard" onclick="loadView('dashboard')" class="sidebar-item">
+      <i class="bi bi-grid-1x2"></i><span>Inicio</span>
+    </button>
+    <button id="nav-pos"      onclick="loadView('pos')"      class="sidebar-item">
+      <i class="bi bi-cart3"></i><span>Venta</span>
+    </button>
+    <button id="nav-products" onclick="loadView('products')" class="sidebar-item">
+      <i class="bi bi-box-seam"></i><span>Productos</span>
+    </button>
+    <button id="nav-users"    onclick="loadView('users')"    class="sidebar-item">
+      <i class="bi bi-people"></i><span>Usuarios</span>
+    </button>
+    <button id="nav-reports"  onclick="loadView('reports')"  class="sidebar-item">
+      <i class="bi bi-bar-chart-line"></i><span>Reportes</span>
+    </button>
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="sidebar-user">
+      <div class="sidebar-avatar"><i class="bi bi-person"></i></div>
+      <div class="sidebar-user-info">
+        <div class="user-name" id="nav-username">Usuario</div>
+        <div class="user-role" id="nav-userrole"></div>
+      </div>
+    </div>
+    <button onclick="logout()" class="sidebar-logout">
+      <i class="bi bi-box-arrow-right"></i><span>Cerrar sesión</span>
+    </button>
+  </div>
+</aside>
+
+<div id="alert-area" class="alert-area"></div>
+<div id="app"></div>
+
+<!-- Modal de confirmación global -->
+<div id="modal-confirm"
+     style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.6);"
+     onclick="if(event.target===this)_cerrarConfirm()">
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+              width:100%;max-width:360px;background:var(--surface);
+              border:1px solid var(--border);border-radius:var(--radius);
+              box-shadow:var(--shadow);padding:1.5rem;">
+    <div style="display:flex;gap:.65rem;align-items:flex-start;margin-bottom:1rem;">
+      <span id="confirm-icon" style="font-size:1.25rem;line-height:1.3;flex-shrink:0;"></span>
+      <div>
+        <p id="confirm-title" style="margin:0 0 .3rem;font-weight:600;font-size:.95rem;"></p>
+        <p id="confirm-msg"   style="margin:0;font-size:.84rem;color:var(--text-muted);"></p>
+      </div>
+    </div>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+      <button onclick="_cerrarConfirm()" class="btn btn-outline-secondary btn-sm">Cancelar</button>
+      <button id="confirm-ok" class="btn btn-sm">Confirmar</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script th:src="@{/js/api.js}"></script>
+<script th:src="@{/js/auth.js}"></script>
+<script>
+const NAV_VIEWS = ['dashboard','pos','products','users','reports'];
+const viewLoaded = {};
+
+function loadView(v) {
+  NAV_VIEWS.forEach(n => {
+    const btn = document.getElementById('nav-' + n);
+    if (btn) btn.classList.toggle('active-nav', n === v);
+    const panel = document.getElementById('view-' + n);
+    if (panel) panel.style.display = 'none';
+  });
+
+  let panel = document.getElementById('view-' + v);
+  if (!panel) {
+    panel = document.createElement('div');
+    panel.id = 'view-' + v;
+    document.getElementById('app').appendChild(panel);
+  }
+  panel.style.display = 'block';
+
+  if (!viewLoaded[v]) {
+    viewLoaded[v] = true;
+    $(panel).load('/views/' + v);
+  }
+}
+
+function logout() { localStorage.clear(); window.location = "/login"; }
+
+/* ── Confirmación global ── */
+window.confirmar = function(titulo, mensaje, onOk, danger) {
+  document.getElementById("confirm-title").textContent = titulo;
+  document.getElementById("confirm-msg").textContent   = mensaje;
+  document.getElementById("confirm-icon").innerHTML    = danger
+      ? '<i class="bi bi-exclamation-triangle-fill" style="color:var(--danger);"></i>'
+      : '<i class="bi bi-question-circle-fill"       style="color:var(--warning);"></i>';
+  const ok = document.getElementById("confirm-ok");
+  ok.className = "btn btn-sm " + (danger ? "btn-danger" : "btn-primary");
+  ok.onclick   = function() { _cerrarConfirm(); onOk(); };
+  document.getElementById("modal-confirm").style.display = "block";
+};
+function _cerrarConfirm() {
+  document.getElementById("modal-confirm").style.display = "none";
+}
+
+/* Global toast helper for child views */
+window.showToast = function(msg, type = 'success') {
+  const area = document.getElementById('alert-area');
+  const div  = document.createElement('div');
+  div.className = 'pos-alert pos-alert-' + type;
+  div.innerHTML = (type === 'success' ? '<i class="bi bi-check-circle me-1"></i>' : '<i class="bi bi-x-circle me-1"></i>') + msg;
+  area.appendChild(div);
+  setTimeout(() => div.remove(), 3200);
+};
+
+/* Aplicar restricciones de rol en la UI */
+(function() {
+    const role = localStorage.getItem("role") || "";
+
+    function applyRoleUI(role) {
+        if (role !== "ADMIN") {
+            const usersBtn    = document.getElementById("nav-users");
+            const productsBtn = document.getElementById("nav-products");
+            if (usersBtn)    usersBtn.style.display    = "none";
+            if (productsBtn) productsBtn.style.display = "none";
+        }
+    }
+
+    /* Mostrar datos desde localStorage mientras llega la respuesta */
+    const cachedNombre = localStorage.getItem("nombre") || localStorage.getItem("user") || "";
+    const usernameEl   = document.getElementById("nav-username");
+    const roleEl       = document.getElementById("nav-userrole");
+    if (usernameEl && cachedNombre) usernameEl.textContent = cachedNombre;
+    if (roleEl && role)             roleEl.textContent     = role;
+    applyRoleUI(role);
+
+    /* Refrescar desde la DB para asegurar nombre real actualizado */
+    $.getJSON("/auth/me", function(res) {
+        if (!res || !res.nombre) return;
+        localStorage.setItem("nombre", res.nombre);
+        localStorage.setItem("role",   res.role || role);
+        if (usernameEl) usernameEl.textContent = res.nombre;
+        if (roleEl)     roleEl.textContent     = res.role || role;
+        applyRoleUI(res.role || role);
+    });
+})();
+
+loadView("dashboard");
+</script>
+</body>
+</html>

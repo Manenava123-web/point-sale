@@ -1,0 +1,15 @@
+
+<div class="card p-3">
+<h4>Venta</h4>
+<input id="code" class="form-control" placeholder="Código producto">
+<button onclick="addProduct()" class="btn btn-primary mt-2">Agregar</button>
+
+<table class="table mt-3">
+<thead><tr><th>Producto</th><th>Precio</th></tr></thead>
+<tbody id="cart"></tbody>
+</table>
+
+<h3>Total: $<span id="total">0</span></h3>
+<button onclick="checkout()" class="btn btn-success">Cobrar</button>
+</div>
+<script src="js/pos.js"></script>

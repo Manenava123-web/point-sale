@@ -1,0 +1,103 @@
+<div style="max-width:1100px;margin:0 auto;">
+
+  <!-- Saludo -->
+  <div style="margin-bottom:1.5rem;">
+    <div class="dash-greeting" id="dash-greeting">Bienvenido</div>
+    <div class="dash-date"    id="dash-date"></div>
+  </div>
+
+  <!-- KPI Cards -->
+  <div class="row g-3 mb-4" id="kpi-row">
+    <!-- Ventas hoy -->
+    <div class="col-6 col-xl-3">
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background:rgba(34,197,94,.12);color:var(--accent);">
+          <i class="bi bi-currency-dollar"></i>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value" id="kpi-total-hoy">—</div>
+          <div class="kpi-label">Ventas hoy</div>
+          <div class="kpi-sub"  id="kpi-sub-hoy"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transacciones -->
+    <div class="col-6 col-xl-3">
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background:rgba(56,189,248,.12);color:var(--info);">
+          <i class="bi bi-receipt"></i>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value" id="kpi-trans-hoy">—</div>
+          <div class="kpi-label">Tickets hoy</div>
+          <div class="kpi-sub"  id="kpi-sub-trans"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Promedio -->
+    <div class="col-6 col-xl-3">
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background:rgba(245,158,11,.12);color:var(--warning);">
+          <i class="bi bi-graph-up"></i>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value" id="kpi-promedio">—</div>
+          <div class="kpi-label">Promedio / venta</div>
+          <div class="kpi-sub">Hoy</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bajo stock -->
+    <div class="col-6 col-xl-3">
+      <div class="kpi-card">
+        <div class="kpi-icon" style="background:rgba(239,68,68,.12);color:var(--danger);">
+          <i class="bi bi-exclamation-triangle"></i>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-value" id="kpi-bajo-stock">—</div>
+          <div class="kpi-label">Bajo stock</div>
+          <div class="kpi-sub">≤ 10 unidades</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts row -->
+  <div class="row g-3">
+
+    <!-- Gráfica semanal -->
+    <div class="col-lg-7">
+      <div class="chart-card" style="height:100%;">
+        <div class="chart-card-title">
+          <i class="bi bi-bar-chart-fill" style="color:var(--accent);"></i>
+          Ventas — últimos 7 días
+        </div>
+        <div style="position:relative;height:220px;">
+          <canvas id="chart-semana"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top productos -->
+    <div class="col-lg-5">
+      <div class="chart-card" style="height:100%;">
+        <div class="chart-card-title">
+          <i class="bi bi-trophy-fill" style="color:var(--warning);"></i>
+          Top productos — 30 días
+        </div>
+        <div id="top-productos-list">
+          <div class="text-center py-4" style="color:var(--text-subtle);font-size:.85rem;">
+            <span class="spinner-border spinner-border-sm me-2"></span>Cargando…
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+<script th:src="@{/js/dashboard.js}"></script>

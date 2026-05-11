@@ -1,0 +1,241 @@
+<script>requireRole("ADMIN")</script>
+
+<div class="row g-3" style="max-width:960px;margin:0 auto;">
+
+  <!-- Columna izquierda: formulario creación -->
+  <div class="col-md-4">
+    <div class="card">
+      <div class="card-header-custom">
+        <div class="header-icon" style="background:rgba(56,139,253,.15);color:var(--info);">
+          <i class="bi bi-person-plus"></i>
+        </div>
+        <h4>Nuevo Usuario</h4>
+      </div>
+      <div class="p-3">
+        <div class="mb-3">
+          <label class="form-label" for="unombre">Nombre completo</label>
+          <div class="input-icon-wrap">
+            <i class="bi bi-person-badge field-icon"></i>
+            <input id="unombre" type="text" class="form-control" placeholder="Ej: María López"
+                   autocomplete="off">
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="uuser">Usuario (login)</label>
+          <div class="input-icon-wrap">
+            <i class="bi bi-person field-icon"></i>
+            <input id="uuser" type="text" class="form-control" placeholder="nombre.apellido"
+                   autocomplete="off">
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="upass">Contraseña</label>
+          <div class="input-icon-wrap">
+            <i class="bi bi-lock field-icon"></i>
+            <input id="upass" type="password" class="form-control" placeholder="Contraseña segura"
+                   autocomplete="new-password">
+            <button type="button" class="password-toggle" onclick="toggleUPass()">
+              <i class="bi bi-eye" id="upass-icon"></i>
+            </button>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="upass2">Confirmar contraseña</label>
+          <div class="input-icon-wrap">
+            <i class="bi bi-lock-fill field-icon"></i>
+            <input id="upass2" type="password" class="form-control" placeholder="Repite la contraseña"
+                   autocomplete="new-password">
+            <button type="button" class="password-toggle" onclick="toggleUPass2()">
+              <i class="bi bi-eye" id="upass2-icon"></i>
+            </button>
+          </div>
+          <div id="upass-mismatch" style="display:none;font-size:.78rem;color:var(--danger);margin-top:.3rem;">
+            <i class="bi bi-exclamation-circle me-1"></i>Las contraseñas no coinciden
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="form-label" for="urole">Rol</label>
+          <select id="urole" class="form-select">
+            <option value="ADMIN">ADMIN — acceso completo</option>
+            <option value="CAJA" selected>CAJA — solo ventas</option>
+          </select>
+        </div>
+        <button onclick="saveUser()" class="btn btn-primary w-100">
+          <i class="bi bi-person-check me-1"></i>Crear usuario
+        </button>
+      </div>
+    </div>
+
+    <div class="mt-3 p-3" style="background:var(--surface-2);border:1px solid var(--border);
+         border-radius:var(--radius);font-size:.8rem;color:var(--text-muted);">
+      <div><i class="bi bi-shield-check me-1" style="color:var(--info);"></i>
+           <strong>ADMIN</strong> gestiona productos, usuarios y reportes.</div>
+      <div class="mt-1"><i class="bi bi-cash-coin me-1" style="color:var(--warning);"></i>
+           <strong>CAJA</strong> solo accede a la pantalla de ventas.</div>
+    </div>
+  </div>
+
+  <!-- Columna derecha: lista de usuarios -->
+  <div class="col-md-8">
+    <div class="card">
+      <div class="card-header-custom">
+        <div class="header-icon" style="background:rgba(56,139,253,.15);color:var(--info);">
+          <i class="bi bi-people"></i>
+        </div>
+        <h4>Usuarios</h4>
+        <span id="users-count" class="ms-auto text-subtle" style="font-size:.8rem;"></span>
+      </div>
+
+      <!-- Loading -->
+      <div id="users-loading" class="text-center py-4" style="display:none;">
+        <span class="spinner-border spinner-border-sm me-2" style="color:var(--text-subtle);"></span>
+        <span style="font-size:.85rem;color:var(--text-subtle);">Cargando…</span>
+      </div>
+
+      <!-- Tabla -->
+      <div id="users-table-wrap" style="overflow-x:auto;display:none;">
+        <table class="table mb-0">
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th class="text-center">Rol</th>
+              <th class="text-center">Estado</th>
+              <th class="text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="ulist"></tbody>
+        </table>
+      </div>
+
+      <!-- Vacío -->
+      <div id="users-empty" class="empty-cart" style="display:none;">
+        <div class="empty-icon"><i class="bi bi-people"></i></div>
+        <div style="font-size:.85rem;">Sin usuarios registrados</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal: editar usuario -->
+<div id="modal-edit-user"
+     style="display:none;position:fixed;inset:0;z-index:1050;background:rgba(0,0,0,.55);"
+     onclick="if(event.target===this)cerrarEditarUsuario()">
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+              width:100%;max-width:380px;background:var(--surface);
+              border:1px solid var(--border);border-radius:var(--radius);
+              box-shadow:var(--shadow);padding:1.5rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.1rem;">
+      <h5 style="margin:0;font-size:1rem;">
+        <i class="bi bi-pencil-square me-2" style="color:var(--info);"></i>Editar usuario
+      </h5>
+      <button onclick="cerrarEditarUsuario()"
+              style="background:none;border:none;color:var(--text-muted);font-size:1.2rem;
+                     cursor:pointer;line-height:1;padding:.1rem .3rem;">&times;</button>
+    </div>
+    <div class="mb-3">
+      <label class="form-label" for="edit-nombre">Nombre completo</label>
+      <input id="edit-nombre" type="text" class="form-control" autocomplete="off"
+             placeholder="Ej: María López">
+    </div>
+    <div class="mb-3">
+      <label class="form-label" for="edit-username">Usuario (login)</label>
+      <input id="edit-username" type="text" class="form-control" autocomplete="off"
+             onkeydown="if(event.key==='Enter')guardarEdicion()">
+    </div>
+    <div class="mb-4">
+      <label class="form-label" for="edit-rol">Rol</label>
+      <select id="edit-rol" class="form-select">
+        <option value="ADMIN">ADMIN — acceso completo</option>
+        <option value="CAJA">CAJA — solo ventas</option>
+      </select>
+    </div>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+      <button onclick="cerrarEditarUsuario()" class="btn btn-outline-secondary btn-sm">Cancelar</button>
+      <button onclick="guardarEdicion()" class="btn btn-primary btn-sm">
+        <i class="bi bi-check-lg me-1"></i>Guardar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: cambiar contraseña -->
+<div id="modal-pass"
+     style="display:none;position:fixed;inset:0;z-index:1050;background:rgba(0,0,0,.55);"
+     onclick="if(event.target===this)cerrarPassword()">
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+              width:100%;max-width:380px;background:var(--surface);
+              border:1px solid var(--border);border-radius:var(--radius);
+              box-shadow:var(--shadow);padding:1.5rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.75rem;">
+      <h5 style="margin:0;font-size:1rem;">
+        <i class="bi bi-key me-2" style="color:var(--warning);"></i>Cambiar contraseña
+      </h5>
+      <button onclick="cerrarPassword()"
+              style="background:none;border:none;color:var(--text-muted);font-size:1.2rem;
+                     cursor:pointer;line-height:1;padding:.1rem .3rem;">&times;</button>
+    </div>
+    <p id="pass-username-label"
+       style="font-size:.85rem;font-weight:600;margin-bottom:1rem;color:var(--text-muted);"></p>
+    <div class="mb-3">
+      <label class="form-label" for="pass-nueva">Nueva contraseña</label>
+      <div class="input-icon-wrap">
+        <i class="bi bi-lock field-icon"></i>
+        <input id="pass-nueva" type="password" class="form-control"
+               placeholder="Nueva contraseña" autocomplete="new-password">
+        <button type="button" class="password-toggle" onclick="togglePassNueva()">
+          <i class="bi bi-eye" id="pass-nueva-icon"></i>
+        </button>
+      </div>
+    </div>
+    <div class="mb-4">
+      <label class="form-label" for="pass-confirmar">Confirmar contraseña</label>
+      <div class="input-icon-wrap">
+        <i class="bi bi-lock-fill field-icon"></i>
+        <input id="pass-confirmar" type="password" class="form-control"
+               placeholder="Repite la contraseña" autocomplete="new-password"
+               onkeydown="if(event.key==='Enter')guardarPassword()">
+        <button type="button" class="password-toggle" onclick="togglePassConfirmar()">
+          <i class="bi bi-eye" id="pass-confirmar-icon"></i>
+        </button>
+      </div>
+      <div id="pass-mismatch" style="display:none;font-size:.78rem;color:var(--danger);margin-top:.3rem;">
+        <i class="bi bi-exclamation-circle me-1"></i>Las contraseñas no coinciden
+      </div>
+    </div>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+      <button onclick="cerrarPassword()" class="btn btn-outline-secondary btn-sm">Cancelar</button>
+      <button onclick="guardarPassword()" class="btn btn-primary btn-sm">
+        <i class="bi bi-check-lg me-1"></i>Actualizar
+      </button>
+    </div>
+  </div>
+</div>
+
+<script th:src="@{/js/users.js}"></script>
+<script>
+function toggleUPass() {
+  const i = document.getElementById("upass");
+  const ic = document.getElementById("upass-icon");
+  i.type = i.type === "password" ? "text" : "password";
+  ic.className = i.type === "password" ? "bi bi-eye" : "bi bi-eye-slash";
+}
+function toggleUPass2() {
+  const i = document.getElementById("upass2");
+  const ic = document.getElementById("upass2-icon");
+  i.type = i.type === "password" ? "text" : "password";
+  ic.className = i.type === "password" ? "bi bi-eye" : "bi bi-eye-slash";
+}
+function togglePassNueva() {
+  const i = document.getElementById("pass-nueva");
+  const ic = document.getElementById("pass-nueva-icon");
+  i.type = i.type === "password" ? "text" : "password";
+  ic.className = i.type === "password" ? "bi bi-eye" : "bi bi-eye-slash";
+}
+function togglePassConfirmar() {
+  const i = document.getElementById("pass-confirmar");
+  const ic = document.getElementById("pass-confirmar-icon");
+  i.type = i.type === "password" ? "text" : "password";
+  ic.className = i.type === "password" ? "bi bi-eye" : "bi bi-eye-slash";
+}
+</script>
