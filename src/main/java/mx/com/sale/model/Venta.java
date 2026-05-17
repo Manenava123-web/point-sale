@@ -28,4 +28,12 @@ public class Venta {
     LocalDateTime fecha;
 
     String usuario;
+
+    @Column(columnDefinition = "TINYINT(1) DEFAULT 0", nullable = false)
+    boolean cancelada;
+
+    Double montoPagado;
+    Double cambio;
+    LocalDateTime fechaCancelacion;
+    String canceladaPor;
 }

@@ -10,14 +10,24 @@
         <h4>Nueva Venta</h4>
       </div>
       <div class="p-3">
-        <label class="form-label" for="code">Código de producto</label>
-        <div class="input-group">
-          <span class="input-group-text"><i class="bi bi-search"></i></span>
-          <input id="code" type="text" class="form-control" placeholder="Escanea o escribe el código"
-                 onkeydown="if(event.key==='Enter')addProduct()" autocomplete="off" autofocus>
-          <button onclick="addProduct()" class="btn btn-primary">
-            <i class="bi bi-plus-lg"></i>
-          </button>
+        <label class="form-label" for="code">Código o nombre del producto</label>
+        <div style="position:relative;">
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input id="code" type="text" class="form-control"
+                   placeholder="Escanea, código o nombre…"
+                   oninput="onPosInput(this.value)"
+                   onkeydown="handlePosKey(event)"
+                   autocomplete="new-password" autofocus>
+            <button onclick="addProduct()" class="btn btn-primary" title="Agregar por código">
+              <i class="bi bi-plus-lg"></i>
+            </button>
+          </div>
+          <div id="pos-dropdown"
+               style="display:none;position:absolute;top:100%;left:0;right:0;z-index:500;
+                      background:var(--surface);border:1px solid var(--border);
+                      border-top:none;border-radius:0 0 var(--radius) var(--radius);
+                      box-shadow:var(--shadow);max-height:280px;overflow-y:auto;"></div>
         </div>
         <p class="text-subtle mt-2 mb-0" style="font-size:.78rem;">
           <i class="bi bi-keyboard me-1"></i>Presiona Enter para agregar

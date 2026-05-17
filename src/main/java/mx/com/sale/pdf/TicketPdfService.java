@@ -25,19 +25,32 @@ public class TicketPdfService {
     final NegocioConfigService configSvc;
     final UsuarioService        userSvc;
 
+    /* BaseFont con CP1252 para renderizar correctamente caracteres acentuados */
+    private static final BaseFont BF_COURIER;
+    private static final BaseFont BF_HELVETICA;
+
+    static {
+        try {
+            BF_COURIER   = BaseFont.createFont(BaseFont.COURIER,   BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
+            BF_HELVETICA = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.CP1252, BaseFont.NOT_EMBEDDED);
+        } catch (Exception e) {
+            throw new ExceptionInInitializerError(e);
+        }
+    }
+
     /* Ticket (térmica 80mm) – fuentes fijas, sin mutación */
-    private static final Font TK_TITLE  = new Font(Font.FontFamily.COURIER, 13, Font.BOLD);
-    private static final Font TK_NORMAL = new Font(Font.FontFamily.COURIER,  9);
-    private static final Font TK_SMALL  = new Font(Font.FontFamily.COURIER,  8);
-    private static final Font TK_TOTAL  = new Font(Font.FontFamily.COURIER, 11, Font.BOLD);
+    private static final Font TK_TITLE  = new Font(BF_COURIER, 13, Font.BOLD);
+    private static final Font TK_NORMAL = new Font(BF_COURIER,  9);
+    private static final Font TK_SMALL  = new Font(BF_COURIER,  8);
+    private static final Font TK_TOTAL  = new Font(BF_COURIER, 11, Font.BOLD);
 
     /* Reportes A4 – factory methods: cada llamada produce una nueva instancia */
-    private static Font fTitle()   { return new Font(Font.FontFamily.HELVETICA, 15, Font.BOLD); }
-    private static Font fSection() { return new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD); }
-    private static Font fNormal()  { return new Font(Font.FontFamily.HELVETICA, 10); }
-    private static Font fSmall()   { return new Font(Font.FontFamily.HELVETICA,  9); }
-    private static Font fTotal()   { return new Font(Font.FontFamily.HELVETICA, 11, Font.BOLD); }
-    private static Font fHeader()  { return new Font(Font.FontFamily.HELVETICA, 10, Font.BOLD, BaseColor.WHITE); }
+    private static Font fTitle()   { return new Font(BF_HELVETICA, 15, Font.BOLD); }
+    private static Font fSection() { return new Font(BF_HELVETICA, 10, Font.BOLD); }
+    private static Font fNormal()  { return new Font(BF_HELVETICA, 10); }
+    private static Font fSmall()   { return new Font(BF_HELVETICA,  9); }
+    private static Font fTotal()   { return new Font(BF_HELVETICA, 11, Font.BOLD); }
+    private static Font fHeader()  { return new Font(BF_HELVETICA, 10, Font.BOLD, BaseColor.WHITE); }
 
     private static final DateTimeFormatter FMT      = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
     private static final DateTimeFormatter FMT_HORA = DateTimeFormatter.ofPattern("HH:mm");

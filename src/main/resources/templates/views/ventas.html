@@ -1,0 +1,77 @@
+<div style="max-width:1050px;margin:0 auto;">
+
+  <div class="card-header-custom" style="margin-bottom:1.25rem;padding:0;">
+    <div class="header-icon" style="background:rgba(56,189,248,.12);color:var(--info);">
+      <i class="bi bi-receipt-cutoff"></i>
+    </div>
+    <h4 style="margin:0;">Historial de ventas</h4>
+    <span id="ventas-count" style="margin-left:auto;font-size:.8rem;color:var(--text-subtle);"></span>
+  </div>
+
+  <!-- Filtro por rango de fechas -->
+  <div style="display:flex;gap:.5rem;align-items:flex-end;flex-wrap:wrap;margin-bottom:1.25rem;">
+    <div>
+      <label style="font-size:.75rem;color:var(--text-subtle);display:block;margin-bottom:.3rem;">Desde</label>
+      <input type="date" id="ventas-desde" class="form-control form-control-sm"
+             style="background:var(--surface-2);border-color:var(--border);color:var(--text);min-width:140px;">
+    </div>
+    <div>
+      <label style="font-size:.75rem;color:var(--text-subtle);display:block;margin-bottom:.3rem;">Hasta</label>
+      <input type="date" id="ventas-hasta" class="form-control form-control-sm"
+             style="background:var(--surface-2);border-color:var(--border);color:var(--text);min-width:140px;"
+             onkeydown="if(event.key==='Enter')loadVentas(0)">
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="loadVentas(0)"
+            style="align-self:flex-end;">
+      <i class="bi bi-search me-1"></i>Buscar
+    </button>
+    <button class="btn btn-outline-secondary btn-sm" onclick="limpiarFiltrosVentas()"
+            style="align-self:flex-end;">
+      <i class="bi bi-x-lg me-1"></i>Limpiar
+    </button>
+  </div>
+
+  <div id="ventas-loading" class="text-center py-4" style="color:var(--text-subtle);">
+    <span class="spinner-border spinner-border-sm me-2"></span>Cargando…
+  </div>
+
+  <div id="ventas-empty" style="display:none;text-align:center;padding:2.5rem 1rem;color:var(--text-subtle);">
+    <i class="bi bi-receipt" style="font-size:2rem;opacity:.3;display:block;margin-bottom:.5rem;"></i>
+    Sin ventas registradas
+  </div>
+
+  <div id="ventas-table-wrap" style="display:none;">
+    <div style="overflow-x:auto;">
+      <table class="table table-sm" id="ventas-table">
+        <thead>
+          <tr>
+            <th style="width:90px;">Folio</th>
+            <th>Fecha</th>
+            <th>Cajero</th>
+            <th class="text-center" style="width:70px;">Art.</th>
+            <th class="text-end">Total</th>
+            <th class="text-end">Recibido</th>
+            <th class="text-end">Cambio</th>
+            <th class="text-center" style="width:90px;">Estado</th>
+            <th style="width:80px;"></th>
+          </tr>
+        </thead>
+        <tbody id="ventas-list"></tbody>
+      </table>
+    </div>
+
+    <div id="ventas-pagination" style="display:flex;align-items:center;justify-content:space-between;
+         padding:.5rem 0;flex-wrap:wrap;gap:.5rem;">
+      <span id="ventas-pag-info" style="font-size:.78rem;color:var(--text-subtle);"></span>
+      <div style="display:flex;gap:.35rem;">
+        <button id="ventas-prev" class="btn btn-outline-secondary btn-sm"
+                onclick="ventasPaginar(-1)">&#8592;</button>
+        <button id="ventas-next" class="btn btn-outline-secondary btn-sm"
+                onclick="ventasPaginar(1)">&#8594;</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script th:src="@{/js/ventas.js}"></script>

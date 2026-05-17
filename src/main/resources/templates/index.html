@@ -33,6 +33,9 @@
     <button id="nav-products" onclick="loadView('products')" class="sidebar-item">
       <i class="bi bi-box-seam"></i><span>Productos</span>
     </button>
+    <button id="nav-ventas"   onclick="loadView('ventas')"   class="sidebar-item">
+      <i class="bi bi-receipt-cutoff"></i><span>Ventas</span>
+    </button>
     <button id="nav-users"    onclick="loadView('users')"    class="sidebar-item">
       <i class="bi bi-people"></i><span>Usuarios</span>
     </button>
@@ -84,7 +87,7 @@
 <script th:src="@{/js/api.js}"></script>
 <script th:src="@{/js/auth.js}"></script>
 <script>
-const NAV_VIEWS = ['dashboard','pos','products','users','reports'];
+const NAV_VIEWS = ['dashboard','pos','products','ventas','users','reports'];
 const viewLoaded = {};
 
 function loadView(v) {
@@ -129,12 +132,18 @@ function _cerrarConfirm() {
 
 /* Global toast helper for child views */
 window.showToast = function(msg, type = 'success') {
-  const area = document.getElementById('alert-area');
-  const div  = document.createElement('div');
+  const icons = { success: 'bi-check-circle-fill', error: 'bi-x-circle-fill', warning: 'bi-exclamation-triangle-fill' };
+  const icon  = icons[type] || icons.success;
+  const area  = document.getElementById('alert-area');
+  const div   = document.createElement('div');
   div.className = 'pos-alert pos-alert-' + type;
-  div.innerHTML = (type === 'success' ? '<i class="bi bi-check-circle me-1"></i>' : '<i class="bi bi-x-circle me-1"></i>') + msg;
+  div.innerHTML = '<i class="bi ' + icon + ' me-1"></i>' + msg;
   area.appendChild(div);
-  setTimeout(() => div.remove(), 3200);
+  setTimeout(() => {
+    div.style.transition = 'opacity .35s';
+    div.style.opacity    = '0';
+    setTimeout(() => div.remove(), 370);
+  }, 3000);
 };
 
 /* Aplicar restricciones de rol en la UI */
@@ -145,8 +154,10 @@ window.showToast = function(msg, type = 'success') {
         if (role !== "ADMIN") {
             const usersBtn    = document.getElementById("nav-users");
             const productsBtn = document.getElementById("nav-products");
+            const ventasBtn   = document.getElementById("nav-ventas");
             if (usersBtn)    usersBtn.style.display    = "none";
             if (productsBtn) productsBtn.style.display = "none";
+            if (ventasBtn)   ventasBtn.style.display   = "none";
         }
     }
 
@@ -169,7 +180,147 @@ window.showToast = function(msg, type = 'success') {
     });
 })();
 
+/* ── Confirmación con contraseña ── */
+let _passConfirmCb = null;
+
+window.pedirPassword = function(descripcion, onOk) {
+    _passConfirmCb = onOk;
+    const desc = document.getElementById("pass-confirm-desc");
+    if (desc && descripcion) desc.textContent = descripcion;
+    document.getElementById("pass-confirm-input").value = "";
+    document.getElementById("pass-confirm-error").style.display = "none";
+    document.getElementById("pass-confirm-ok").disabled = false;
+    document.getElementById("modal-pass-confirm").style.display = "block";
+    setTimeout(() => document.getElementById("pass-confirm-input").focus(), 80);
+};
+
+function _cerrarPassConfirm() {
+    document.getElementById("modal-pass-confirm").style.display = "none";
+    _passConfirmCb = null;
+}
+
+function _submitPassConfirm() {
+    const password = document.getElementById("pass-confirm-input").value;
+    if (!password) return;
+    const btn = document.getElementById("pass-confirm-ok");
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Verificando…';
+
+    apiPost("/auth/verify-password", { password }, function() {
+        _cerrarPassConfirm();
+        if (_passConfirmCb) { const cb = _passConfirmCb; _passConfirmCb = null; cb(); }
+    }, function() {
+        document.getElementById("pass-confirm-error").style.display = "block";
+        btn.disabled = false;
+        btn.innerHTML = '<i class="bi bi-check2-circle me-1"></i>Confirmar';
+        document.getElementById("pass-confirm-input").value = "";
+        document.getElementById("pass-confirm-input").focus();
+    });
+}
+
 loadView("dashboard");
 </script>
+
+<!-- Modal de confirmación con contraseña -->
+<div id="modal-pass-confirm"
+     style="display:none;position:fixed;inset:0;z-index:2100;background:rgba(0,0,0,.65);">
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+              width:100%;max-width:380px;background:var(--surface);
+              border:1px solid var(--border);border-radius:var(--radius);
+              box-shadow:var(--shadow);padding:1.75rem;">
+
+    <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:.5rem;">
+      <i class="bi bi-shield-lock-fill" style="font-size:1.25rem;color:var(--danger);"></i>
+      <span style="font-weight:700;font-size:1rem;">Confirmar cancelación</span>
+    </div>
+    <p id="pass-confirm-desc"
+       style="font-size:.83rem;color:var(--text-muted);margin-bottom:1.2rem;padding-left:1.85rem;">
+      Ingresa tu contraseña para cancelar la venta.
+    </p>
+
+    <div style="margin-bottom:.9rem;">
+      <label style="font-size:.82rem;color:var(--text-muted);margin-bottom:.4rem;display:block;">
+        Contraseña
+      </label>
+      <input id="pass-confirm-input" type="password" class="form-control"
+             placeholder="••••••••"
+             onkeydown="if(event.key==='Enter')_submitPassConfirm()"
+             autocomplete="current-password">
+    </div>
+
+    <div id="pass-confirm-error"
+         style="display:none;font-size:.8rem;color:var(--danger);
+                margin-bottom:.9rem;padding:.45rem .7rem;
+                background:rgba(239,68,68,.1);border-radius:var(--radius-sm);">
+      <i class="bi bi-x-circle me-1"></i>Contraseña incorrecta
+    </div>
+
+    <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+      <button onclick="_cerrarPassConfirm()" class="btn btn-outline-secondary btn-sm">Cancelar</button>
+      <button id="pass-confirm-ok" class="btn btn-danger btn-sm"
+              onclick="_submitPassConfirm()">
+        <i class="bi bi-check2-circle me-1"></i>Confirmar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de cobro en efectivo -->
+<div id="modal-cobro"
+     style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.65);">
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+              width:100%;max-width:420px;background:var(--surface);
+              border:1px solid var(--border);border-radius:var(--radius);
+              box-shadow:var(--shadow);padding:1.75rem;">
+
+    <div style="display:flex;align-items:center;gap:.6rem;margin-bottom:1.25rem;">
+      <i class="bi bi-cash-coin" style="font-size:1.3rem;color:var(--accent);"></i>
+      <span style="font-weight:700;font-size:1rem;">Cobro en efectivo</span>
+    </div>
+
+    <div style="background:var(--surface-2);border-radius:var(--radius-sm);
+                padding:.9rem 1rem;margin-bottom:1.25rem;text-align:center;">
+      <div style="font-size:.75rem;color:var(--text-muted);margin-bottom:.2rem;">Total a cobrar</div>
+      <div id="cobro-total" style="font-size:2rem;font-weight:700;color:var(--accent);letter-spacing:-.02em;">$0.00</div>
+    </div>
+
+    <div style="margin-bottom:1rem;">
+      <label style="font-size:.82rem;color:var(--text-muted);margin-bottom:.4rem;display:block;">
+        Monto recibido
+      </label>
+      <div class="input-group">
+        <span class="input-group-text" style="font-weight:600;">$</span>
+        <input id="cobro-input" type="number" min="0" step="0.01"
+               class="form-control" style="font-size:1.1rem;font-weight:600;"
+               placeholder="0.00" oninput="actualizarCambio()">
+      </div>
+    </div>
+
+    <div style="display:flex;gap:.4rem;flex-wrap:wrap;margin-bottom:1.25rem;">
+      <span style="font-size:.72rem;color:var(--text-subtle);width:100%;margin-bottom:.1rem;">Billetes rápidos</span>
+      <button class="btn btn-outline-secondary btn-sm" onclick="setBillete(20)"  style="font-size:.78rem;">$20</button>
+      <button class="btn btn-outline-secondary btn-sm" onclick="setBillete(50)"  style="font-size:.78rem;">$50</button>
+      <button class="btn btn-outline-secondary btn-sm" onclick="setBillete(100)" style="font-size:.78rem;">$100</button>
+      <button class="btn btn-outline-secondary btn-sm" onclick="setBillete(200)" style="font-size:.78rem;">$200</button>
+      <button class="btn btn-outline-secondary btn-sm" onclick="setBillete(500)" style="font-size:.78rem;">$500</button>
+      <button class="btn btn-outline-secondary btn-sm" onclick="setBillete(1000)" style="font-size:.78rem;">$1,000</button>
+    </div>
+
+    <div id="cobro-cambio-wrap"
+         style="border-radius:var(--radius-sm);padding:.65rem 1rem;
+                margin-bottom:1.25rem;text-align:center;display:none;">
+      <div style="font-size:.78rem;margin-bottom:.15rem;" id="cobro-cambio-label">Cambio</div>
+      <div id="cobro-cambio" style="font-size:1.5rem;font-weight:700;"></div>
+    </div>
+
+    <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+      <button onclick="cerrarCobro()" class="btn btn-outline-secondary btn-sm">Cancelar</button>
+      <button id="cobro-ok" class="btn btn-primary btn-sm" disabled
+              onclick="confirmarCobro()">
+        <i class="bi bi-check2-circle me-1"></i>Confirmar venta
+      </button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

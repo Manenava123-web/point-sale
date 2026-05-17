@@ -46,6 +46,14 @@ public class ProductoService {
         });
     }
 
+    @Transactional
+    public void restaurar(String id, int cantidad) {
+        repo.findById(id).ifPresent(p -> {
+            p.setStock(p.getStock() + cantidad);
+            repo.save(p);
+        });
+    }
+
     public List<Producto> bajoStock(int umbral) {
         return repo.findByStockLessThanEqualOrderByStockAsc(umbral);
     }

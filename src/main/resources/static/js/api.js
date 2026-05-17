@@ -83,7 +83,7 @@ function apiPost(url, data, cb, errCb) {
         data: JSON.stringify(data),
         success: cb,
         error: function(xhr) {
-            if (xhr.status === 401 || xhr.status === 403) {
+            if ((xhr.status === 401 || xhr.status === 403) && url !== "/auth/login" && url !== "/auth/verify-password") {
                 window.location.href = "/login";
                 return;
             }

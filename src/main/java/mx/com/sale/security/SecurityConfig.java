@@ -24,7 +24,12 @@ public class SecurityConfig {
                 .requestMatchers("/index", "/auth/me", "/products/**", "/sales/**", "/reports/**", "/users/**", "/config/**", "/dashboard/**").authenticated()
                 .anyRequest().authenticated())
             .exceptionHandling(ex -> ex
-                .authenticationEntryPoint((req, res, e) -> res.sendRedirect("/login")))
+                .authenticationEntryPoint((req, res, e) -> {
+                    if ("XMLHttpRequest".equals(req.getHeader("X-Requested-With")))
+                        res.sendError(jakarta.servlet.http.HttpServletResponse.SC_UNAUTHORIZED, "Session expired");
+                    else
+                        res.sendRedirect("/login");
+                }))
             .logout(logout -> logout
                 .logoutUrl("/logout")
                 .logoutSuccessUrl("/login")

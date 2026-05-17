@@ -6,6 +6,7 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -57,6 +58,21 @@ public class AuthController {
             res.put("role",   defaultRole);
         }
         return res;
+    }
+
+    @PostMapping("/verify-password")
+    public ResponseEntity<Void> verifyPassword(
+            @RequestBody Map<String, String> body,
+            org.springframework.security.core.Authentication auth) {
+        if (auth == null || !auth.isAuthenticated())
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        String username = auth.getName();
+        String password = body.getOrDefault("password", "");
+        var u = us.login(username, password);
+        if (u != null) return ResponseEntity.ok().build();
+        if (defaultUser.equals(username) && defaultPass.equals(password))
+            return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     @PostMapping("/login")
