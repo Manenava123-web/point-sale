@@ -26,8 +26,8 @@ public class DashboardService {
         LocalDate hoy   = LocalDate.now();
         LocalDate lunes = hoy.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
 
-        List<Venta> ventasHoy    = fetch(hoy.atStartOfDay(),   hoy.atTime(23, 59, 59), filtro);
-        List<Venta> ventasSemana = fetch(lunes.atStartOfDay(), hoy.atTime(23, 59, 59), filtro);
+        List<Venta> ventasHoy    = fetch(hoy.atStartOfDay(),   finDia(hoy),   filtro);
+        List<Venta> ventasSemana = fetch(lunes.atStartOfDay(), finDia(hoy),   filtro);
 
         double totalHoy    = ventasHoy.stream().mapToDouble(Venta::getTotal).sum();
         double totalSemana = ventasSemana.stream().mapToDouble(Venta::getTotal).sum();
@@ -46,7 +46,7 @@ public class DashboardService {
         LocalDate hoy    = LocalDate.now();
         LocalDate inicio = hoy.minusDays(6);
 
-        List<Venta> ventas = fetch(inicio.atStartOfDay(), hoy.atTime(23, 59, 59), filtro);
+        List<Venta> ventas = fetch(inicio.atStartOfDay(), finDia(hoy), filtro);
 
         Map<LocalDate, List<Venta>> porDia = ventas.stream()
                 .filter(v -> v.getFecha() != null)
@@ -70,16 +70,28 @@ public class DashboardService {
         LocalDate hoy    = LocalDate.now();
         LocalDate inicio = hoy.minusDays(29);
 
-        List<Venta> ventas = fetch(inicio.atStartOfDay(), hoy.atTime(23, 59, 59), filtro);
+        List<Venta> ventas = fetch(inicio.atStartOfDay(), finDia(hoy), filtro);
 
-        Map<String, long[]> conteo = new LinkedHashMap<>();
+        Map<String, long[]>  conteo  = new LinkedHashMap<>();
+        Map<String, String>  nombres = new HashMap<>();
+
         for (Venta v : ventas) {
             if (v.getItems() == null) continue;
             v.getItems().forEach(p -> {
-                conteo.computeIfAbsent(p.getName(), k -> new long[]{0, 0});
-                conteo.get(p.getName())[0]++;
-                conteo.get(p.getName())[1] += Math.round(p.getPrice() * 100);
+                String key = (p.getId() != null && !p.getId().isBlank()) ? p.getId() : p.getName();
+                conteo.computeIfAbsent(key, k -> new long[]{0, 0});
+                conteo.get(key)[0]++;
+                conteo.get(key)[1] += Math.round(p.getPrice() * 100);
+                nombres.putIfAbsent(key, p.getName());
             });
+        }
+
+        /* Resolver nombres actuales desde la tabla de productos */
+        List<String> ids = conteo.keySet().stream()
+                .filter(k -> k.contains("-"))
+                .collect(Collectors.toList());
+        if (!ids.isEmpty()) {
+            productoRepo.findAllById(ids).forEach(p -> nombres.put(p.getId(), p.getName()));
         }
 
         return conteo.entrySet().stream()
@@ -87,7 +99,7 @@ public class DashboardService {
                 .limit(7)
                 .map(e -> {
                     Map<String, Object> m = new LinkedHashMap<>();
-                    m.put("nombre",   e.getKey());
+                    m.put("nombre",   nombres.getOrDefault(e.getKey(), e.getKey()));
                     m.put("cantidad", e.getValue()[0]);
                     m.put("total",    e.getValue()[1] / 100.0);
                     return m;
@@ -97,7 +109,11 @@ public class DashboardService {
 
     private List<Venta> fetch(LocalDateTime desde, LocalDateTime hasta, Collection<String> filtro) {
         if (filtro == null || filtro.isEmpty())
-            return ventaRepo.findByFechaBetween(desde, hasta);
-        return ventaRepo.findByUsuarioInAndFechaBetween(filtro, desde, hasta);
+            return ventaRepo.findByCanceladaFalseAndFechaBetween(desde, hasta);
+        return ventaRepo.findByCanceladaFalseAndUsuarioInAndFechaBetween(filtro, desde, hasta);
+    }
+
+    private static LocalDateTime finDia(LocalDate d) {
+        return d.atTime(23, 59, 59, 999_999_999);
     }
 }
