@@ -8,7 +8,8 @@
       "PowerShell(docker exec punto-venta-mysql mysql -uroot -pp01nts4l3 -e \"SHOW VARIABLES LIKE 'character_set%'; SHOW VARIABLES LIKE 'collation_server';\" 2>&1)",
       "Bash(mvnw.cmd compile *)",
       "PowerShell(Get-Command mvn -ErrorAction SilentlyContinue)",
-      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:8080/products?page=0&size=1\" -TimeoutSec 5 -UseBasicParsing; \"Status: $\\($r.StatusCode\\) — $\\($r.Content.Substring\\(0,[Math]::Min\\(200,$r.Content.Length\\)\\)\\)\" } catch { \"Error: $_\" })"
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:8080/products?page=0&size=1\" -TimeoutSec 5 -UseBasicParsing; \"Status: $\\($r.StatusCode\\) — $\\($r.Content.Substring\\(0,[Math]::Min\\(200,$r.Content.Length\\)\\)\\)\" } catch { \"Error: $_\" })",
+      "PowerShell(Get-ChildItem -Path \"d:\\\\proyectos_personales\\\\point-sale\\\\src\\\\main\\\\resources\" -Recurse | Select-Object FullName | ForEach-Object { $_.FullName } | Sort-Object)"
     ]
   }
 }

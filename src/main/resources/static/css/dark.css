@@ -665,3 +665,108 @@ body.no-sidebar { padding-left: 0; }
 .text-subtle { color: var(--text-subtle) !important; }
 .surface-2   { background: var(--surface-2) !important; }
 .divider     { border-color: var(--border) !important; }
+
+/* ── Mobile topbar ────────────────────────────────────────────── */
+#mobile-topbar {
+  display: none;
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 52px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  z-index: 900;
+  align-items: center;
+  padding: 0 1rem;
+  gap: .75rem;
+}
+.mobile-brand {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+.brand-icon-sm {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #22c55e 0%, #15803d 100%);
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .85rem;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(34,197,94,.35);
+}
+.mobile-brand-name {
+  font-weight: 700;
+  font-size: .95rem;
+  color: #f1f5f9;
+  letter-spacing: -.02em;
+}
+.hamburger-btn {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 1.45rem;
+  padding: .3rem .35rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  line-height: 1;
+  transition: background var(--transition), color var(--transition);
+  flex-shrink: 0;
+}
+.hamburger-btn:hover { background: var(--surface-2); color: var(--text); }
+
+/* ── Sidebar overlay (mobile) ─────────────────────────────────── */
+#sidebar-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.55);
+  z-index: 999;
+}
+#sidebar-overlay.active { display: block; }
+
+/* ── Mobile breakpoint ────────────────────────────────────────── */
+@media (max-width: 767px) {
+  body {
+    padding-left: 0 !important;
+    padding-top: 52px;
+  }
+
+  #app { padding: 1rem .75rem; }
+
+  #mobile-topbar { display: flex; }
+
+  #sidebar {
+    left: calc(-1 * var(--sidebar-w) - 20px);
+    top: 0;
+    bottom: 0;
+    border-radius: 0 16px 16px 0;
+    transition: left 230ms cubic-bezier(.4,0,.2,1);
+    z-index: 1000;
+  }
+  #sidebar.sidebar-open { left: 0; }
+
+  /* Toast: full-width under topbar */
+  .alert-area {
+    top: 60px;
+    right: .75rem;
+    left: .75rem;
+    width: auto;
+  }
+
+  /* Modals: full-width with margin */
+  #modal-confirm > div,
+  #modal-pass-confirm > div,
+  #modal-cobro > div {
+    max-width: calc(100vw - 2rem) !important;
+    padding: 1.25rem 1rem !important;
+    margin: 0 1rem;
+  }
+
+  /* Botones rápidos de cobro: más grandes para touch */
+  #modal-cobro .btn-outline-secondary {
+    padding: .45rem .65rem !important;
+    font-size: .82rem !important;
+  }
+}

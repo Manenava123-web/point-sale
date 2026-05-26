@@ -13,6 +13,17 @@
 </head>
 <body>
 
+<div id="mobile-topbar">
+  <button id="hamburger" onclick="toggleSidebar()" class="hamburger-btn" aria-label="Menú">
+    <i class="bi bi-list"></i>
+  </button>
+  <div class="mobile-brand">
+    <span class="brand-icon-sm">&#128179;</span>
+    <span class="mobile-brand-name">POS PRO</span>
+  </div>
+</div>
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
 <aside id="sidebar">
   <div class="sidebar-brand">
     <span class="brand-icon">&#128179;</span>
@@ -90,7 +101,17 @@
 const NAV_VIEWS = ['dashboard','pos','products','ventas','users','reports'];
 const viewLoaded = {};
 
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('sidebar-open');
+  document.getElementById('sidebar-overlay').classList.toggle('active');
+}
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('sidebar-open');
+  document.getElementById('sidebar-overlay').classList.remove('active');
+}
+
 function loadView(v) {
+  closeSidebar();
   NAV_VIEWS.forEach(n => {
     const btn = document.getElementById('nav-' + n);
     if (btn) btn.classList.toggle('active-nav', n === v);
