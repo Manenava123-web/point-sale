@@ -7,7 +7,7 @@ COPY pom.xml .
 RUN mvn dependency:go-offline -q
 
 COPY src ./src
-RUN mvn clean package -DskipTests && mv target/*.war target/app.war
+RUN mvn clean package -DskipTests -q
 
 # ── Stage 2: runtime ──────────────────────────────────────────
 FROM eclipse-temurin:17-jre-alpine
@@ -17,4 +17,4 @@ COPY --from=build /app/target/point-sale-1.0.0.war app.war
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.war", "--spring.profiles.active=prod"]
+ENTRYPOINT ["java", "-jar", "app.war", "--spring.profiles.active=preprod"]
