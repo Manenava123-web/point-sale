@@ -13,7 +13,7 @@ RUN mvn clean package -DskipTests -q
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
-COPY --from=build /app/target/point-sale-1.0.0.jar app.jar
+COPY --from=build /app/target/point-sale-1.0.0.war app.war
 
 EXPOSE 8080
 
