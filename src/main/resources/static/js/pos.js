@@ -310,17 +310,19 @@ function _doCheckout(montoPagado) {
     );
 }
 
-/* Cerrar dropdown al hacer clic fuera */
+/* Cerrar dropdown al hacer clic fuera — seguro si el elemento no existe aún */
 document.addEventListener("click", function(e) {
     const dd    = document.getElementById("pos-dropdown");
     const input = document.getElementById("code");
     if (dd && !dd.contains(e.target) && e.target !== input) hideDropdown();
 });
 
-render();
-/* Chrome autofills asynchronously — clear after it runs */
-const _codeInput = document.getElementById("code");
-if (_codeInput) {
-    _codeInput.value = "";
-    setTimeout(() => { _codeInput.value = ""; }, 300);
+/* Init: llamado desde loadView en index.html */
+function initPos() {
+    render();
+    const _codeInput = document.getElementById("code");
+    if (_codeInput) {
+        _codeInput.value = "";
+        setTimeout(() => { _codeInput.value = ""; }, 300);
+    }
 }

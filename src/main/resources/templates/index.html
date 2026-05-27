@@ -100,6 +100,7 @@
 <script th:src="@{/js/products.js}"></script>
 <script th:src="@{/js/ventas.js}"></script>
 <script th:src="@{/js/users.js}"></script>
+<script th:src="@{/js/pos.js}"></script>
 <script>
 const NAV_VIEWS = ['dashboard','pos','products','ventas','users','reports'];
 const viewLoaded = {};
@@ -136,6 +137,7 @@ function loadView(v) {
       if (v === 'products') loadProducts(0);
       if (v === 'ventas')   loadVentas(0);
       if (v === 'users')    loadUsers && loadUsers();
+      if (v === 'pos')      initPos && initPos();
     });
   }
 }
