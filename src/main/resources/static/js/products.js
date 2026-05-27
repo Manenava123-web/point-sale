@@ -223,5 +223,4 @@ function confirmarSurtir() {
     );
 }
 
-/* ── Init ───────────────────────────────────────────────────── */
-loadProducts();
+/* ── Init: llamado desde loadView en index.html ─────────────── */

@@ -203,4 +203,4 @@ function cambiarActivo(id, username, activo) {
   );
 }
 
-loadUsers();
+/* Init: llamado desde loadView en index.html */

@@ -100,4 +100,4 @@ function ejecutarCancelacion(id) {
     });
 }
 
-loadVentas();
+/* Init: llamado desde loadView en index.html */

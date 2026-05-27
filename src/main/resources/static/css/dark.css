@@ -737,6 +737,13 @@ body.no-sidebar { padding-left: 0; }
 
   #mobile-topbar { display: flex; }
 
+  /* KPI cards: reducir para que montos quepan en col-6 */
+  .kpi-card  { padding: .75rem .85rem; gap: .55rem; }
+  .kpi-icon  { width: 34px; height: 34px; font-size: .95rem; }
+  .kpi-value { font-size: .88rem; letter-spacing: 0; }
+  .kpi-label { font-size: .63rem; }
+  .kpi-sub   { font-size: .65rem; }
+
   #sidebar {
     left: calc(-1 * var(--sidebar-w) - 20px);
     top: 0;

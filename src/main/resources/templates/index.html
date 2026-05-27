@@ -97,6 +97,9 @@
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script th:src="@{/js/api.js}"></script>
 <script th:src="@{/js/auth.js}"></script>
+<script th:src="@{/js/products.js}"></script>
+<script th:src="@{/js/ventas.js}"></script>
+<script th:src="@{/js/users.js}"></script>
 <script>
 const NAV_VIEWS = ['dashboard','pos','products','ventas','users','reports'];
 const viewLoaded = {};
@@ -129,7 +132,11 @@ function loadView(v) {
 
   if (!viewLoaded[v]) {
     viewLoaded[v] = true;
-    $(panel).load('/views/' + v);
+    $(panel).load('/views/' + v, function() {
+      if (v === 'products') loadProducts(0);
+      if (v === 'ventas')   loadVentas(0);
+      if (v === 'users')    loadUsers && loadUsers();
+    });
   }
 }
 

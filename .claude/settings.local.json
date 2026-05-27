@@ -9,7 +9,10 @@
       "Bash(mvnw.cmd compile *)",
       "PowerShell(Get-Command mvn -ErrorAction SilentlyContinue)",
       "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:8080/products?page=0&size=1\" -TimeoutSec 5 -UseBasicParsing; \"Status: $\\($r.StatusCode\\) — $\\($r.Content.Substring\\(0,[Math]::Min\\(200,$r.Content.Length\\)\\)\\)\" } catch { \"Error: $_\" })",
-      "PowerShell(Get-ChildItem -Path \"d:\\\\proyectos_personales\\\\point-sale\\\\src\\\\main\\\\resources\" -Recurse | Select-Object FullName | ForEach-Object { $_.FullName } | Sort-Object)"
+      "PowerShell(Get-ChildItem -Path \"d:\\\\proyectos_personales\\\\point-sale\\\\src\\\\main\\\\resources\" -Recurse | Select-Object FullName | ForEach-Object { $_.FullName } | Sort-Object)",
+      "Bash(Get-Content src/main/resources/static/js/users.js)",
+      "Bash(Select-Object -Last 5)",
+      "Bash(Get-Content src/main/resources/static/js/reports.js)"
     ]
   }
 }
