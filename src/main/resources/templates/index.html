@@ -248,8 +248,9 @@ function _submitPassConfirm() {
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Verificando…';
 
     apiPost("/auth/verify-password", { password }, function() {
+        const cb = _passConfirmCb;
         _cerrarPassConfirm();
-        if (_passConfirmCb) { const cb = _passConfirmCb; _passConfirmCb = null; cb(); }
+        if (cb) cb();
     }, function() {
         document.getElementById("pass-confirm-error").style.display = "block";
         btn.disabled = false;
