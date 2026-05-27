@@ -145,9 +145,3 @@
 .report-desc  { font-size: .8rem; color: var(--text-muted); margin-top: .1rem; }
 .rpt-btn      { white-space: nowrap; flex-shrink: 0; }
 </style>
-
-<script th:src="@{/js/reports.js}"></script>
-<script>
-document.getElementById("today-date").textContent = new Date().toLocaleDateString("es-MX",
-  { weekday:"long", year:"numeric", month:"long", day:"numeric" });
-</script>

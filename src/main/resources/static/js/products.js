@@ -1,7 +1,7 @@
 /* ── Estado ─────────────────────────────────────────────────── */
 let prodPage   = 0;
 let prodSearch = "";
-let searchTimer;
+let prodSearchTimer;
 let surtirId   = null;
 
 /* ── Guardar producto ────────────────────────────────────────── */
@@ -30,8 +30,8 @@ function saveProduct() {
 
 /* ── Búsqueda con debounce ───────────────────────────────────── */
 function onSearch(val) {
-    clearTimeout(searchTimer);
-    searchTimer = setTimeout(() => {
+    clearTimeout(prodSearchTimer);
+    prodSearchTimer = setTimeout(() => {
         prodSearch = val.trim();
         prodPage   = 0;
         loadProducts();

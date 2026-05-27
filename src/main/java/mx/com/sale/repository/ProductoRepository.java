@@ -13,5 +13,6 @@ import java.util.Optional;
 public interface ProductoRepository extends JpaRepository<Producto, String> {
     Optional<Producto> findByCodeIgnoreCase(String code);
     Page<Producto> findByNameContainingIgnoreCase(String name, Pageable pageable);
+    Page<Producto> findByNameContainingIgnoreCaseOrCodeContainingIgnoreCase(String name, String code, Pageable pageable);
     List<Producto> findByStockLessThanEqualOrderByStockAsc(int umbral);
 }

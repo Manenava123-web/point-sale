@@ -1,4 +1,4 @@
-(function () {
+function initDashboard() {
 
   /* ── Saludo y fecha ── */
   const nombre = localStorage.getItem("nombre") || localStorage.getItem("user") || "Usuario";
@@ -123,4 +123,4 @@
     }).join("");
   });
 
-})();
+}

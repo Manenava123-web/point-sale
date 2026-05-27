@@ -41,10 +41,12 @@ function guardarConfig() {
     );
 }
 
-/* Mostrar sección y cargar datos si es ADMIN */
-(function() {
+function initReports() {
+    const dateEl = document.getElementById("today-date");
+    if (dateEl) dateEl.textContent = new Date().toLocaleDateString("es-MX",
+        { weekday:"long", year:"numeric", month:"long", day:"numeric" });
     if (localStorage.getItem("role") === "ADMIN") {
         const el = document.getElementById("config-negocio");
         if (el) { el.style.display = "block"; cargarConfig(); }
     }
-})();
+}

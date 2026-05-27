@@ -66,7 +66,10 @@ function posSearch(q) {
             ddProducts = list;
             renderDropdown(list);
         },
-        function() { hideDropdown(); }
+        function(msg) {
+            hideDropdown();
+            if (window.showToast) showToast("Error al buscar: " + msg, "error");
+        }
     );
 }
 
@@ -319,10 +322,15 @@ document.addEventListener("click", function(e) {
 
 /* Init: llamado desde loadView en index.html */
 function initPos() {
+    clearTimeout(searchTimer);
+    searchTimer = null;
+    hideDropdown();
     render();
-    const _codeInput = document.getElementById("code");
-    if (_codeInput) {
-        _codeInput.value = "";
-        setTimeout(() => { _codeInput.value = ""; }, 300);
+    const codeInput = document.getElementById("code");
+    if (codeInput) {
+        codeInput.value = "";
+        codeInput.oninput   = function() { onPosInput(this.value); };
+        codeInput.onkeydown = function(e) { handlePosKey(e); };
+        codeInput.focus();
     }
 }

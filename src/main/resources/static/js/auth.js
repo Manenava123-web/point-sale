@@ -11,9 +11,9 @@ function login() {
         localStorage.setItem("nombre", res.nombre || res.user || "");
         window.location.href = "/index";
     },
-    function(msg) {
+    function() {
         if (typeof showLoginError === 'function') {
-            showLoginError(msg || "Usuario o contraseña incorrectos");
+            showLoginError("Usuario o contraseña incorrectos");
         } else if (typeof setLoginLoading === 'function') {
             setLoginLoading(false);
         }

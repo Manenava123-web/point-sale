@@ -31,7 +31,8 @@ public class ProductoService {
         if (query == null || query.isBlank()) {
             return repo.findAll(pageable);
         }
-        return repo.findByNameContainingIgnoreCase(query.trim(), pageable);
+        String q = query.trim();
+        return repo.findByNameContainingIgnoreCaseOrCodeContainingIgnoreCase(q, q, pageable);
     }
 
     public Optional<Producto> getByCode(String code) {
