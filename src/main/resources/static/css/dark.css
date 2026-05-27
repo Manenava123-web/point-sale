@@ -737,10 +737,11 @@ body.no-sidebar { padding-left: 0; }
 
   #mobile-topbar { display: flex; }
 
-  /* KPI cards: reducir para que montos quepan en col-6 */
+  /* KPI cards: col-6 en móvil — quitar clipping, reducir tamaños */
   .kpi-card  { padding: .75rem .85rem; gap: .55rem; }
   .kpi-icon  { width: 34px; height: 34px; font-size: .95rem; }
-  .kpi-value { font-size: .88rem; letter-spacing: 0; }
+  .kpi-value { font-size: .92rem; letter-spacing: 0;
+               white-space: normal; overflow: visible; text-overflow: initial; }
   .kpi-label { font-size: .63rem; }
   .kpi-sub   { font-size: .65rem; }
 
