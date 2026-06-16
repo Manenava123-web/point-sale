@@ -106,9 +106,26 @@
           <label class="form-label" for="cfg-direccion">Dirección</label>
           <input id="cfg-direccion" type="text" class="form-control" placeholder="Calle, colonia…">
         </div>
-        <div class="mb-4">
+        <div class="mb-3">
           <label class="form-label" for="cfg-telefono">Teléfono</label>
           <input id="cfg-telefono" type="text" class="form-control" placeholder="(000) 000-0000">
+        </div>
+        <div class="mb-4">
+          <label class="form-label">Logo del negocio</label>
+          <div id="logo-preview-wrap" style="display:none;margin-bottom:.65rem;display:flex;align-items:center;gap:.75rem;">
+            <img id="logo-preview" src="" alt="Logo"
+                 style="max-height:72px;max-width:180px;border-radius:6px;
+                        border:1px solid var(--border);padding:4px;background:var(--surface-2);">
+            <button onclick="eliminarLogo()" class="btn btn-outline-danger btn-sm" style="font-size:.75rem;">
+              <i class="bi bi-trash3 me-1"></i>Quitar
+            </button>
+          </div>
+          <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;">
+            <input id="logo-file" type="file" accept="image/png,image/jpeg,image/webp"
+                   class="form-control form-control-sm" style="max-width:260px;"
+                   onchange="subirLogo(this)">
+            <span style="font-size:.73rem;color:var(--text-subtle);">PNG, JPG o WEBP · máx 1 MB</span>
+          </div>
         </div>
         <button onclick="guardarConfig()" class="btn btn-primary">
           <i class="bi bi-floppy me-1"></i>Guardar cambios

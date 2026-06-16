@@ -15,17 +15,24 @@ public class NegocioConfigService {
 
     public NegocioConfig get() {
         return repo.findById(ID)
-                .orElseGet(() -> new NegocioConfig(ID, "Mi Negocio", "", ""));
+                .orElseGet(() -> new NegocioConfig(ID, "Mi Negocio", "", "", null));
     }
 
     public NegocioConfig actualizar(NegocioConfig config) {
         config.setId(ID);
+        if (config.getLogo() == null) config.setLogo(get().getLogo());
         return repo.save(config);
+    }
+
+    public NegocioConfig actualizarLogo(String logo) {
+        NegocioConfig cfg = get();
+        cfg.setLogo(logo);
+        return repo.save(cfg);
     }
 
     public void initIfAbsent(String nombre, String direccion, String telefono) {
         if (!repo.existsById(ID)) {
-            repo.save(new NegocioConfig(ID, nombre, direccion, telefono));
+            repo.save(new NegocioConfig(ID, nombre, direccion, telefono, null));
         }
     }
 }

@@ -64,6 +64,15 @@ public class TicketPdfService {
         doc.open();
 
         NegocioConfig cfg = configSvc.get();
+        if (ok(cfg.getLogo())) {
+            try {
+                Image img = Image.getInstance(decodeLogo(cfg.getLogo()));
+                img.scaleToFit(120f, 60f);
+                img.setAlignment(Element.ALIGN_CENTER);
+                doc.add(img);
+                doc.add(gap(3f));
+            } catch (Exception ignored) {}
+        }
         doc.add(pCenter(cfg.getNombre(), TK_TITLE));
         if (ok(cfg.getDireccion())) doc.add(pCenter(cfg.getDireccion(), TK_SMALL));
         if (ok(cfg.getTelefono()))  doc.add(pCenter("Tel. " + cfg.getTelefono(), TK_SMALL));
@@ -198,6 +207,16 @@ public class TicketPdfService {
     private void header(Document doc, String titulo, String sub) throws DocumentException {
         NegocioConfig cfg = configSvc.get();
 
+        if (ok(cfg.getLogo())) {
+            try {
+                Image img = Image.getInstance(decodeLogo(cfg.getLogo()));
+                img.scaleToFit(110f, 55f);
+                img.setAlignment(Element.ALIGN_CENTER);
+                doc.add(img);
+                doc.add(new Paragraph(" ") {{ setSpacingAfter(3f); }});
+            } catch (Exception ignored) {}
+        }
+
         Paragraph nom = new Paragraph(cfg.getNombre(), fTitle());
         nom.setAlignment(Element.ALIGN_CENTER);
         nom.setSpacingAfter(2f);
@@ -318,5 +337,11 @@ public class TicketPdfService {
 
     private boolean ok(String s) {
         return s != null && !s.isBlank();
+    }
+
+    private byte[] decodeLogo(String dataUrl) {
+        int comma = dataUrl.indexOf(',');
+        String b64 = comma >= 0 ? dataUrl.substring(comma + 1) : dataUrl;
+        return java.util.Base64.getDecoder().decode(b64);
     }
 }

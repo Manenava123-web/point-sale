@@ -22,6 +22,9 @@
     <span class="brand-icon-sm">&#128179;</span>
     <span class="mobile-brand-name">POS PRO</span>
   </div>
+  <button onclick="toggleTheme()" class="hamburger-btn ms-auto" aria-label="Cambiar tema">
+    <i id="theme-icon-mobile" class="bi bi-sun"></i>
+  </button>
 </div>
 <div id="sidebar-overlay" onclick="closeSidebar()"></div>
 
@@ -64,6 +67,10 @@
         <div class="user-role" id="nav-userrole"></div>
       </div>
     </div>
+    <button id="theme-toggle" onclick="toggleTheme()" class="sidebar-logout">
+      <i id="theme-icon" class="bi bi-sun" style="color:var(--text-subtle);"></i>
+      <span id="theme-label">Tema claro</span>
+    </button>
     <button onclick="logout()" class="sidebar-logout">
       <i class="bi bi-box-arrow-right"></i><span>Cerrar sesión</span>
     </button>
@@ -259,6 +266,29 @@ function _submitPassConfirm() {
         document.getElementById("pass-confirm-input").focus();
     });
 }
+
+/* ── Tema claro / oscuro ── */
+function applyTheme(mode) {
+  const isLight = mode === "light";
+  document.body.classList.toggle("light", isLight);
+  const icon  = isLight ? "bi-moon"  : "bi-sun";
+  const label = isLight ? "Tema oscuro" : "Tema claro";
+  const iconEl   = document.getElementById("theme-icon");
+  const iconMob  = document.getElementById("theme-icon-mobile");
+  const labelEl  = document.getElementById("theme-label");
+  if (iconEl)  iconEl.className  = "bi " + icon;
+  if (iconMob) iconMob.className = "bi " + icon;
+  if (labelEl) labelEl.textContent = label;
+}
+function toggleTheme() {
+  const next = document.body.classList.contains("light") ? "dark" : "light";
+  localStorage.setItem("theme", next);
+  applyTheme(next);
+}
+(function() {
+  const saved = localStorage.getItem("theme");
+  if (saved === "light") applyTheme("light");
+})();
 
 loadView("dashboard");
 </script>

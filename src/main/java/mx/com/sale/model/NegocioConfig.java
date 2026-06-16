@@ -16,4 +16,7 @@ public class NegocioConfig {
     String nombre;
     String direccion;
     String telefono;
+
+    @Column(columnDefinition = "LONGTEXT")
+    String logo;
 }
