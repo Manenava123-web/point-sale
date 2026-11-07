@@ -2,9 +2,11 @@ package mx.com.sale.controller;
 
 import lombok.RequiredArgsConstructor;
 import mx.com.sale.model.CorteCaja;
+import mx.com.sale.model.PrestamoCaja;
 import mx.com.sale.model.Venta;
 import mx.com.sale.pdf.TicketPdfService;
 import mx.com.sale.service.CajaService;
+import mx.com.sale.service.PrestamoCajaService;
 import mx.com.sale.service.ProductoService;
 import mx.com.sale.service.UsuarioService;
 import org.springframework.http.HttpHeaders;
@@ -26,19 +28,26 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class CajaController {
 
-    final CajaService      cs;
-    final ProductoService  ps;
-    final TicketPdfService pdf;
-    final UsuarioService   us;
+    final CajaService         cs;
+    final ProductoService     ps;
+    final PrestamoCajaService prestamos;
+    final TicketPdfService    pdf;
+    final UsuarioService      us;
 
     private static final DateTimeFormatter FFECHA = DateTimeFormatter.ofPattern("ddMMyyyy");
 
     @GetMapping("/daily")
     public ResponseEntity<byte[]> corte(Authentication auth) throws Exception {
-        List<Venta> ventas = isAdmin(auth) ? cs.ventasHoy() : cs.ventasHoy(keysOf(auth));
+        boolean admin = isAdmin(auth);
+        java.util.Set<String> keys = admin ? null : keysOf(auth);
+        List<Venta> ventas = admin ? cs.ventasHoy() : cs.ventasHoy(keys);
         CorteCaja   corte  = cs.corteDeVentas(ventas);
-        return pdfResponse(pdf.generarCorte(corte, ventas),
-                "corte-" + LocalDate.now().format(FFECHA) + ".pdf");
+        LocalDate hoy = LocalDate.now();
+        List<PrestamoCaja> salidas    = prestamos.prestamosDelDia(hoy, keys);
+        List<PrestamoCaja> entradas   = prestamos.devolucionesDelDia(hoy, keys);
+        List<PrestamoCaja> pendientes = prestamos.pendientes(keys);
+        return pdfResponse(pdf.generarCorte(corte, ventas, salidas, entradas, pendientes),
+                "corte-" + hoy.format(FFECHA) + ".pdf");
     }
 
     @GetMapping("/weekly")

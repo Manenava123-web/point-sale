@@ -1,0 +1,245 @@
+<div style="max-width:1100px;margin:0 auto;">
+  <div class="row g-3">
+
+    <div class="col-lg-5">
+      <div class="card">
+        <div class="card-header-custom">
+          <div class="header-icon" style="background:rgba(56,139,253,.12);color:var(--info);">
+            <i class="bi bi-file-earmark-text"></i>
+          </div>
+          <h4>Nueva factura</h4>
+        </div>
+        <div class="p-3">
+          <div class="mb-3">
+            <label class="form-label" for="factura-folio">Folio de la venta</label>
+            <div class="input-group">
+              <input id="factura-folio" type="text" class="form-control" placeholder="Folio o ID"
+                     onkeydown="if(event.key==='Enter')buscarVentaFactura()">
+              <button class="btn btn-outline-secondary" onclick="buscarVentaFactura()">
+                <i class="bi bi-search"></i>
+              </button>
+            </div>
+          </div>
+
+          <div id="factura-preview" style="display:none;border:1px solid var(--border);border-radius:8px;padding:.75rem;margin-bottom:1rem;">
+            <div id="factura-preview-meta" style="font-size:.8rem;color:var(--text-muted);margin-bottom:.4rem;"></div>
+            <div id="factura-preview-lineas" style="font-size:.8rem;"></div>
+            <div id="factura-preview-total" style="font-weight:700;text-align:right;margin-top:.45rem;"></div>
+            <div id="factura-preview-aviso" style="display:none;font-size:.75rem;margin-top:.45rem;"></div>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label" for="factura-cliente">Cliente</label>
+            <input id="factura-cliente" type="text" class="form-control" maxlength="120" placeholder="Nombre o razón social">
+          </div>
+          <div class="mb-2">
+            <button type="button" onclick="publicoGeneral()" class="btn btn-outline-secondary btn-sm">
+              Público en general
+            </button>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="factura-rfc">RFC</label>
+            <input id="factura-rfc" type="text" class="form-control" maxlength="18" placeholder="RFC del receptor">
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="factura-cp">Código postal</label>
+            <input id="factura-cp" type="text" class="form-control" maxlength="5" placeholder="5 dígitos">
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="factura-regimen">Régimen fiscal</label>
+            <select id="factura-regimen" class="form-select">
+              <option value="">Selecciona…</option>
+              <option value="601">601 General de Ley Personas Morales</option>
+              <option value="603">603 Fines no Lucrativos</option>
+              <option value="605">605 Sueldos y Salarios</option>
+              <option value="606">606 Arrendamiento</option>
+              <option value="612">612 Actividades Empresariales</option>
+              <option value="616">616 Sin obligaciones fiscales</option>
+              <option value="621">621 Incorporación Fiscal</option>
+              <option value="625">625 Plataformas Tecnológicas</option>
+              <option value="626">626 Resico</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="factura-uso">Uso del CFDI</label>
+            <select id="factura-uso" class="form-select">
+              <option value="G01">G01 Adquisición de mercancías</option>
+              <option value="G02">G02 Devoluciones o descuentos</option>
+              <option value="G03" selected>G03 Gastos en general</option>
+              <option value="S01">S01 Sin efectos fiscales</option>
+              <option value="CP01">CP01 Pagos</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="factura-forma">Forma de pago</label>
+            <select id="factura-forma" class="form-select">
+              <option value="01" selected>01 Efectivo</option>
+              <option value="02">02 Cheque</option>
+              <option value="03">03 Transferencia</option>
+              <option value="04">04 Tarjeta de crédito</option>
+              <option value="28">28 Tarjeta de débito</option>
+              <option value="99">99 Por definir</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="factura-metodo">Método de pago</label>
+            <select id="factura-metodo" class="form-select">
+              <option value="PUE" selected>PUE Una sola exhibición</option>
+              <option value="PPD">PPD Parcialidades o diferido</option>
+            </select>
+          </div>
+          <p style="font-size:.75rem;color:var(--text-subtle);margin-bottom:1rem;">
+            La factura toma los productos de la venta y los datos fiscales guardados por el administrador.
+          </p>
+          <button id="factura-guardar" onclick="guardarFactura()" class="btn btn-primary w-100" disabled>
+            <i class="bi bi-printer me-1"></i>Generar factura
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-7">
+      <div class="card">
+        <div class="card-header-custom">
+          <div class="header-icon" style="background:rgba(63,185,80,.12);color:var(--success);">
+            <i class="bi bi-files"></i>
+          </div>
+          <h4>Facturas</h4>
+          <span id="facturas-count" class="ms-auto text-subtle" style="font-size:.8rem;"></span>
+        </div>
+
+        <div id="facturas-loading" class="text-center py-4" style="display:none;">
+          <span class="spinner-border spinner-border-sm me-2" style="color:var(--text-subtle);"></span>
+          <span style="font-size:.85rem;color:var(--text-subtle);">Cargando…</span>
+        </div>
+
+        <div id="facturas-table-wrap" style="overflow-x:auto;display:none;">
+          <table class="table mb-0" style="font-size:.82rem;">
+            <thead>
+              <tr>
+                <th>Factura</th>
+                <th>Fecha</th>
+                <th>Cliente</th>
+                <th>Venta</th>
+                <th class="text-end">Total</th>
+                <th class="text-center">PDF</th>
+              </tr>
+            </thead>
+            <tbody id="facturas-list"></tbody>
+          </table>
+        </div>
+
+        <div id="facturas-empty" class="empty-cart" style="display:none;">
+          <div class="empty-icon"><i class="bi bi-file-earmark"></i></div>
+          <div style="font-size:.85rem;">Sin facturas</div>
+        </div>
+
+        <div id="facturas-pagination" style="display:none;border-top:1px solid var(--border-soft);">
+          <div class="d-flex align-items-center justify-content-between px-3 py-2">
+            <span id="facturas-pag-info" style="font-size:.78rem;color:var(--text-subtle);"></span>
+            <div style="display:flex;gap:.35rem;">
+              <button id="facturas-prev" class="btn btn-outline-secondary btn-sm" onclick="facturasPaginar(-1)">&#8592;</button>
+              <button id="facturas-next" class="btn btn-outline-secondary btn-sm" onclick="facturasPaginar(1)">&#8594;</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="config-fiscal" style="display:none;margin-top:1rem;">
+    <div class="card">
+      <div class="card-header-custom">
+        <div class="header-icon" style="background:rgba(210,153,34,.12);color:var(--warning);">
+          <i class="bi bi-file-earmark-lock"></i>
+        </div>
+        <h4>Datos fiscales CFDI</h4>
+        <span style="font-size:.75rem;color:var(--text-subtle);margin-left:.5rem;">Pídeselos al contador · Producción</span>
+      </div>
+      <div class="p-3">
+        <div id="fiscal-faltantes" style="font-size:.8rem;border-radius:8px;padding:.65rem .8rem;margin-bottom:1rem;background:var(--surface-2);border:1px solid var(--border);"></div>
+
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label" for="fis-rfc">RFC del emisor</label>
+            <input id="fis-rfc" type="text" class="form-control" maxlength="13" placeholder="XAXX010101000">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="fis-cp">Código postal</label>
+            <input id="fis-cp" type="text" class="form-control" maxlength="5" placeholder="00000">
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="fis-razon">Razón social</label>
+            <input id="fis-razon" type="text" class="form-control" maxlength="180" placeholder="Nombre fiscal del negocio">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="fis-regimen">Régimen fiscal</label>
+            <select id="fis-regimen" class="form-select">
+              <option value="">Selecciona…</option>
+              <option value="601">601 General de Ley Personas Morales</option>
+              <option value="603">603 Personas Morales con Fines no Lucrativos</option>
+              <option value="605">605 Sueldos y Salarios</option>
+              <option value="606">606 Arrendamiento</option>
+              <option value="612">612 Actividades Empresariales y Profesionales</option>
+              <option value="616">616 Sin obligaciones fiscales</option>
+              <option value="621">621 Incorporación Fiscal</option>
+              <option value="625">625 Plataformas Tecnológicas</option>
+              <option value="626">626 Régimen Simplificado de Confianza</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="fis-clave">Clave producto SAT</label>
+            <input id="fis-clave" type="text" class="form-control" maxlength="8" placeholder="01010101">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label" for="fis-unidad">Unidad SAT</label>
+            <input id="fis-unidad" type="text" class="form-control" maxlength="3" placeholder="H87">
+          </div>
+        </div>
+
+        <h5 style="font-size:.9rem;margin:1.2rem 0 .7rem;">Certificado de sello digital (CSD)</h5>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label" for="fis-cer">Archivo .cer</label>
+            <input id="fis-cer" type="file" accept=".cer" class="form-control form-control-sm" onchange="subirCertificado('cer', this)">
+            <div id="fis-cer-nombre" style="font-size:.75rem;color:var(--text-subtle);margin-top:.3rem;"></div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="fis-key">Archivo .key</label>
+            <input id="fis-key" type="file" accept=".key" class="form-control form-control-sm" onchange="subirCertificado('key', this)">
+            <div id="fis-key-nombre" style="font-size:.75rem;color:var(--text-subtle);margin-top:.3rem;"></div>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="fis-key-pass">Contraseña de la llave</label>
+            <input id="fis-key-pass" type="password" class="form-control" autocomplete="new-password" placeholder="La entrega el contador">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label" for="fis-nocert">Número de certificado</label>
+            <input id="fis-nocert" type="text" class="form-control" maxlength="40" placeholder="Opcional, viene en el .cer">
+          </div>
+        </div>
+
+        <h5 style="font-size:.9rem;margin:1.2rem 0 .7rem;">PAC (proveedor de certificación)</h5>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label" for="fis-pac">Nombre del PAC</label>
+            <input id="fis-pac" type="text" class="form-control" maxlength="80" placeholder="Finkok, SW Sapien, Facturama…">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="fis-pac-user">Usuario del PAC</label>
+            <input id="fis-pac-user" type="text" class="form-control" maxlength="80" autocomplete="off">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="fis-pac-pass">Contraseña del PAC</label>
+            <input id="fis-pac-pass" type="password" class="form-control" autocomplete="new-password" placeholder="No se vuelve a mostrar">
+          </div>
+        </div>
+
+        <button onclick="guardarFiscal()" class="btn btn-primary" style="margin-top:1rem;">
+          <i class="bi bi-floppy me-1"></i>Guardar datos fiscales
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

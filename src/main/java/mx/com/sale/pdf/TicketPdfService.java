@@ -4,11 +4,18 @@ import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.*;
 import com.itextpdf.text.pdf.draw.LineSeparator;
 import lombok.RequiredArgsConstructor;
+import mx.com.sale.fiscal.CatalogoFiscal;
 import mx.com.sale.model.CorteCaja;
+import mx.com.sale.model.Factura;
 import mx.com.sale.model.NegocioConfig;
+import mx.com.sale.model.PrestamoCaja;
 import mx.com.sale.model.Producto;
 import mx.com.sale.model.Venta;
+import mx.com.sale.model.ConfigFiscal;
+import mx.com.sale.service.ConfigFiscalService;
+import mx.com.sale.service.FacturaService;
 import mx.com.sale.service.NegocioConfigService;
+import mx.com.sale.service.ProductoService;
 import mx.com.sale.service.UsuarioService;
 import org.springframework.stereotype.Service;
 
@@ -16,7 +23,12 @@ import java.io.ByteArrayOutputStream;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -24,6 +36,8 @@ public class TicketPdfService {
 
     final NegocioConfigService configSvc;
     final UsuarioService        userSvc;
+    final ProductoService       productoSvc;
+    final ConfigFiscalService   fiscalSvc;
 
     /* BaseFont con CP1252 para renderizar correctamente caracteres acentuados */
     private static final BaseFont BF_COURIER;
@@ -99,8 +113,81 @@ public class TicketPdfService {
         return out.toByteArray();
     }
 
+    // ── Factura de una venta ─────────────────────────────────────────────────
+    public byte[] generarFactura(Factura f, Venta v) throws Exception {
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        Document doc = a4();
+        PdfWriter.getInstance(doc, out);
+        doc.open();
+
+        String emitida = f.getFecha() != null ? f.getFecha().format(FMT) : "-";
+        header(doc, "FACTURA " + f.getFolio(), "Emitida: " + emitida);
+
+        ConfigFiscal cfg = fiscalSvc.obtener();
+        String emisorRfc = primero(f.getEmisorRfc(), cfg.getRfc());
+        String emisorRazon = primero(f.getEmisorRazon(), cfg.getRazonSocial());
+        String emisorRegimen = primero(f.getEmisorRegimen(), cfg.getRegimenFiscal());
+        String emisorCp = primero(f.getEmisorCp(), cfg.getCodigoPostal());
+        String certificado = primero(f.getNumeroCertificado(), cfg.getNumeroCertificado());
+        String clave = primero(f.getClaveProdServ(), cfg.getClaveProdServ());
+        String unidad = primero(f.getClaveUnidad(), cfg.getClaveUnidad());
+        if (clave.isBlank()) clave = "01010101";
+        if (unidad.isBlank()) unidad = "H87";
+
+        doc.add(new Paragraph("EMISOR", fSection()));
+        doc.add(new Paragraph(emisorRazon.isBlank() ? configSvc.get().getNombre() : emisorRazon, fNormal()));
+        doc.add(new Paragraph("RFC: " + (emisorRfc.isBlank() ? "Pendiente" : emisorRfc), fNormal()));
+        doc.add(new Paragraph("Régimen: " + textoCatalogo(CatalogoFiscal.REGIMEN, emisorRegimen), fNormal()));
+        doc.add(new Paragraph("Lugar de expedición: " + (emisorCp.isBlank() ? "Pendiente" : emisorCp), fNormal()));
+        doc.add(new Paragraph("No. certificado: " + (certificado.isBlank() ? "Pendiente de cargar" : certificado), fSmall()));
+        if (ok(cfg.getPacNombre()))
+            doc.add(new Paragraph("PAC: " + cfg.getPacNombre(), fSmall()));
+
+        doc.add(gap(4f));
+        doc.add(new Paragraph("RECEPTOR", fSection()));
+        doc.add(new Paragraph(ok(f.getClienteNombre()) ? f.getClienteNombre() : "-", fNormal()));
+        doc.add(new Paragraph("RFC: " + (ok(f.getClienteRfc()) ? f.getClienteRfc() : "-"), fNormal()));
+        doc.add(new Paragraph("Régimen: " + textoCatalogo(CatalogoFiscal.REGIMEN, f.getClienteRegimen()), fNormal()));
+        doc.add(new Paragraph("Código postal: " + (ok(f.getClienteCodigoPostal()) ? f.getClienteCodigoPostal() : "-"), fNormal()));
+        doc.add(new Paragraph("Uso CFDI: " + textoCatalogo(CatalogoFiscal.USO, f.getUsoCfdi()), fNormal()));
+        doc.add(new Paragraph("Forma de pago: " + textoCatalogo(CatalogoFiscal.FORMA, f.getFormaPago()), fNormal()));
+        doc.add(new Paragraph("Método de pago: " + textoCatalogo(CatalogoFiscal.METODO, f.getMetodoPago()), fNormal()));
+
+        String ventaFolio = folio(v.getId());
+        String ventaFecha = v.getFecha() != null ? v.getFecha().format(FMT) : "-";
+        doc.add(new Paragraph("Venta: " + ventaFolio + "    Fecha de venta: " + ventaFecha, fSmall()));
+        doc.add(new Paragraph("Clave de producto SAT: " + clave + "    Unidad: " + unidad, fSmall()));
+
+        PdfPTable tabla = tabla(new float[]{0.8f, 3.4f, 1.3f, 1.4f});
+        for (String h : new String[]{"Cant.", "Descripción", "Precio", "Importe"})
+            tabla.addCell(th(h));
+        for (FacturaService.Linea linea : FacturaService.lineas(v)) {
+            td(tabla, String.valueOf(linea.getCantidad()));
+            td(tabla, linea.getNombre());
+            td(tabla, money(linea.getPrecio()));
+            td(tabla, money(linea.getImporte()));
+        }
+        doc.add(tabla);
+
+        PdfPTable res = resTable();
+        row(res, "Total:", money(f.getTotal()));
+        doc.add(res);
+        Paragraph nota = new Paragraph(
+                "Datos fiscales preparados para CFDI. El sello del SAT se obtiene con el PAC cuando el certificado queda cargado.",
+                fSmall());
+        nota.setSpacingBefore(8f);
+        doc.add(nota);
+        doc.add(footer());
+
+        doc.close();
+        return out.toByteArray();
+    }
+
     // ── Corte diario ─────────────────────────────────────────────────────────
-    public byte[] generarCorte(CorteCaja corte, List<Venta> ventas) throws Exception {
+    public byte[] generarCorte(CorteCaja corte, List<Venta> ventas,
+                                List<PrestamoCaja> prestamosHoy,
+                                List<PrestamoCaja> devolucionesHoy,
+                                List<PrestamoCaja> pendientes) throws Exception {
         ByteArrayOutputStream out = new ByteArrayOutputStream();
         Document doc = a4();
         PdfWriter.getInstance(doc, out);
@@ -120,10 +207,29 @@ public class TicketPdfService {
         doc.add(tabla);
         doc.add(hr());
 
+        if (prestamosHoy == null) prestamosHoy = List.of();
+        if (devolucionesHoy == null) devolucionesHoy = List.of();
+        if (pendientes == null) pendientes = List.of();
+
+        double prestado = prestamosHoy.stream().mapToDouble(PrestamoCaja::getMonto).sum();
+        double devuelto = devolucionesHoy.stream().mapToDouble(PrestamoCaja::getMonto).sum();
+
         PdfPTable res = resTable();
-        row(res, "Total ventas:",  String.valueOf(corte.getVentas()));
-        row(res, "Importe total:", String.format("$%.2f", corte.getTotal()));
+        row(res, "Total ventas:",      String.valueOf(corte.getVentas()));
+        row(res, "Importe ventas:",    money(corte.getTotal()));
+        row(res, "Préstamos:",         money(prestado));
+        row(res, "Dinero devuelto:",   money(devuelto));
+        row(res, "Efectivo esperado:", money(corte.getTotal() - prestado + devuelto));
         doc.add(res);
+
+        Paragraph nota = new Paragraph(
+                "Efectivo esperado = ventas - préstamos + dinero devuelto.", fSmall());
+        nota.setAlignment(Element.ALIGN_RIGHT);
+        nota.setSpacingBefore(2f);
+        doc.add(nota);
+
+        agregarMovimientosCaja(doc, prestamosHoy, devolucionesHoy, pendientes);
+        agregarDesglose(doc, ventas);
         doc.add(footer());
 
         doc.close();
@@ -161,6 +267,7 @@ public class TicketPdfService {
         row(res, "Importe total:",  String.format("$%.2f", total));
         row(res, "Promedio/venta:", String.format("$%.2f", prom));
         doc.add(res);
+        agregarDesglose(doc, ventas);
         doc.add(footer());
 
         doc.close();
@@ -177,8 +284,9 @@ public class TicketPdfService {
         header(doc, "ALERTA DE BAJO STOCK",
                 "Productos con 10 o menos unidades  ·  " + LocalDate.now().format(FMT_DATE));
 
-        PdfPTable tabla = tabla(new float[]{3.5f, 1.5f, 1f, 1.8f});
-        for (String h : new String[]{"Nombre", "Código", "Stock", "Precio"}) tabla.addCell(th(h));
+        PdfPTable tabla = tabla(new float[]{2.4f, 1.15f, 0.7f, 1.15f, 0.95f, 1.05f, 1.05f});
+        for (String h : new String[]{"Nombre", "Código", "Stock", "P. proveedor", "Utilidad %", "Utilidad $", "Precio"})
+            tabla.addCell(th(h));
 
         for (Producto p : productos) {
             td(tabla, p.getName());
@@ -193,13 +301,216 @@ public class TicketPdfService {
             sc.setBorderColor(new BaseColor(210, 210, 210));
             tabla.addCell(sc);
 
-            td(tabla, String.format("$%.2f", p.getPrice()));
+            if (p.tieneDesglose()) {
+                td(tabla, money(p.getSupplierPrice()));
+                td(tabla, pct(p.getUtilityPercent()));
+                td(tabla, money(p.utilidadImporte()));
+            } else {
+                td(tabla, "-");
+                td(tabla, "-");
+                td(tabla, "-");
+            }
+            td(tabla, money(p.getPrice()));
         }
         doc.add(tabla);
         doc.add(footer());
 
         doc.close();
         return out.toByteArray();
+    }
+
+    // ── Préstamos y devoluciones del corte ───────────────────────────────────
+    private void agregarMovimientosCaja(Document doc,
+                                         List<PrestamoCaja> prestamosHoy,
+                                         List<PrestamoCaja> devolucionesHoy,
+                                         List<PrestamoCaja> pendientes) throws DocumentException {
+        class Linea {
+            LocalDateTime cuando;
+            String persona;
+            String concepto;
+            String tipo;
+            double monto;
+        }
+        List<Linea> lineas = new ArrayList<>();
+        for (PrestamoCaja p : prestamosHoy) {
+            Linea l = new Linea();
+            l.cuando = p.getFecha();
+            l.persona = p.getPersona();
+            l.concepto = p.getConcepto();
+            l.tipo = "Préstamo";
+            l.monto = p.getMonto();
+            lineas.add(l);
+        }
+        for (PrestamoCaja p : devolucionesHoy) {
+            Linea l = new Linea();
+            l.cuando = p.getFechaDevolucion();
+            l.persona = p.getPersona();
+            l.concepto = p.getConcepto();
+            l.tipo = "Dinero devuelto";
+            l.monto = p.getMonto();
+            lineas.add(l);
+        }
+        lineas.sort(Comparator.comparing(l -> l.cuando, Comparator.nullsLast(Comparator.naturalOrder())));
+
+        if (!lineas.isEmpty()) {
+            doc.add(hr());
+            Paragraph titulo = new Paragraph("PRÉSTAMOS Y DEVOLUCIONES DEL DÍA", fSection());
+            titulo.setSpacingBefore(4f);
+            titulo.setSpacingAfter(2f);
+            doc.add(titulo);
+
+            PdfPTable tabla = tabla(new float[]{1.1f, 2.1f, 2.6f, 1.7f, 1.2f});
+            for (String h : new String[]{"Hora", "Persona", "Concepto", "Movimiento", "Monto"})
+                tabla.addCell(th(h));
+            for (Linea l : lineas) {
+                td(tabla, l.cuando != null ? l.cuando.format(FMT_HORA) : "-");
+                td(tabla, ok(l.persona) ? l.persona : "-");
+                td(tabla, ok(l.concepto) ? l.concepto : "-");
+                td(tabla, l.tipo);
+                td(tabla, money(l.monto));
+            }
+            doc.add(tabla);
+        }
+
+        if (pendientes == null || pendientes.isEmpty()) return;
+
+        doc.add(hr());
+        Paragraph pend = new Paragraph("PENDIENTE POR DEVOLVER", fSection());
+        pend.setSpacingBefore(4f);
+        pend.setSpacingAfter(2f);
+        doc.add(pend);
+
+        PdfPTable tabla = tabla(new float[]{1.7f, 2.2f, 2.8f, 1.3f});
+        for (String h : new String[]{"Fecha", "Persona", "Concepto", "Monto"})
+            tabla.addCell(th(h));
+        double totalPendiente = 0;
+        for (PrestamoCaja p : pendientes) {
+            td(tabla, p.getFecha() != null ? p.getFecha().format(FMT_DATE) : "-");
+            td(tabla, ok(p.getPersona()) ? p.getPersona() : "-");
+            td(tabla, ok(p.getConcepto()) ? p.getConcepto() : "-");
+            td(tabla, money(p.getMonto()));
+            totalPendiente += p.getMonto();
+        }
+        doc.add(tabla);
+
+        PdfPTable res = resTable();
+        row(res, "Por devolver:", money(totalPendiente));
+        doc.add(res);
+    }
+
+    // ── Desglose de costo y utilidad ─────────────────────────────────────────
+    private void agregarDesglose(Document doc, List<Venta> ventas) throws DocumentException {
+        if (ventas == null || ventas.isEmpty()) return;
+
+        Map<String, Producto> catalogo = new HashMap<>();
+        for (Producto p : productoSvc.all()) {
+            if (p.getId() != null) catalogo.put(p.getId(), p);
+        }
+
+        Map<String, Agg> lineas = new LinkedHashMap<>();
+        boolean incompleto = false;
+
+        for (Venta v : ventas) {
+            if (v.getItems() == null) continue;
+            for (Producto item : v.getItems()) {
+                double supplier = item.getSupplierPrice();
+                double utilidad = item.getUtilityPercent();
+                boolean tiene = item.tieneDesglose();
+                if (!tiene && item.getId() != null) {
+                    Producto cat = catalogo.get(item.getId());
+                    if (cat != null && cat.tieneDesglose()) {
+                        supplier = cat.getSupplierPrice();
+                        utilidad = cat.getUtilityPercent();
+                        tiene = true;
+                    }
+                }
+                if (!tiene) incompleto = true;
+
+                String nombre = item.getName() != null ? item.getName() : "-";
+                String key = (item.getId() != null ? item.getId() : nombre)
+                        + String.format("|%.2f|%.2f|%.2f", item.getPrice(), supplier, utilidad);
+                Agg agg = lineas.get(key);
+                if (agg == null) {
+                    agg = new Agg(nombre, supplier, utilidad, item.getPrice(), tiene);
+                    lineas.put(key, agg);
+                }
+                agg.cantidad++;
+            }
+        }
+        if (lineas.isEmpty()) return;
+
+        doc.add(hr());
+        Paragraph titulo = new Paragraph("DESGLOSE DE PRECIO Y UTILIDAD", fSection());
+        titulo.setSpacingBefore(4f);
+        titulo.setSpacingAfter(2f);
+        doc.add(titulo);
+
+        PdfPTable tabla = tabla(new float[]{2.3f, 0.7f, 1.2f, 1.0f, 1.05f, 1.15f, 1.15f});
+        for (String h : new String[]{"Producto", "Cant.", "P. proveedor", "Utilidad %", "Precio", "Utilidad $", "Importe"})
+            tabla.addCell(th(h));
+
+        double costoTotal = 0;
+        double utilidadTotal = 0;
+        for (Agg a : lineas.values()) {
+            td(tabla, a.nombre);
+            td(tabla, String.valueOf(a.cantidad));
+            double importe = a.price * a.cantidad;
+            if (a.tiene) {
+                double utilLinea = (a.price - a.supplier) * a.cantidad;
+                td(tabla, money(a.supplier));
+                td(tabla, pct(a.pct));
+                td(tabla, money(a.price));
+                td(tabla, money(utilLinea));
+                td(tabla, money(importe));
+                costoTotal += a.supplier * a.cantidad;
+                utilidadTotal += utilLinea;
+            } else {
+                td(tabla, "-");
+                td(tabla, "-");
+                td(tabla, money(a.price));
+                td(tabla, "-");
+                td(tabla, money(importe));
+            }
+        }
+        doc.add(tabla);
+
+        PdfPTable res = resTable();
+        row(res, "Costo proveedor:", money(costoTotal));
+        row(res, "Utilidad:", money(utilidadTotal));
+        doc.add(res);
+
+        if (incompleto) {
+            Paragraph nota = new Paragraph(
+                    "Los productos sin precio de proveedor no entran al costo ni a la utilidad.",
+                    fSmall());
+            nota.setSpacingBefore(2f);
+            doc.add(nota);
+        }
+    }
+
+    private String money(double v) {
+        return String.format("$%.2f", v);
+    }
+
+    private String pct(double v) {
+        return String.format("%.2f%%", v);
+    }
+
+    private static final class Agg {
+        final String nombre;
+        int cantidad;
+        final double supplier;
+        final double pct;
+        final double price;
+        final boolean tiene;
+
+        Agg(String nombre, double supplier, double pct, double price, boolean tiene) {
+            this.nombre = nombre;
+            this.supplier = supplier;
+            this.pct = pct;
+            this.price = price;
+            this.tiene = tiene;
+        }
     }
 
     // ── Helpers de layout ────────────────────────────────────────────────────
@@ -337,6 +648,16 @@ public class TicketPdfService {
 
     private boolean ok(String s) {
         return s != null && !s.isBlank();
+    }
+
+    private String primero(String preferido, String alterno) {
+        if (ok(preferido)) return preferido;
+        return alterno == null ? "" : alterno;
+    }
+
+    private String textoCatalogo(java.util.Map<String, String> catalogo, String clave) {
+        String texto = CatalogoFiscal.texto(catalogo, clave);
+        return texto.isBlank() ? "-" : texto;
     }
 
     private byte[] decodeLogo(String dataUrl) {

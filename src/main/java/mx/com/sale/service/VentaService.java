@@ -31,6 +31,7 @@ public class VentaService {
         double total = 0;
         Map<String, Integer> cantidades = new LinkedHashMap<>();
         for (var item : v.getItems()) {
+            ps.copiarCostoAlItem(item);
             cantidades.merge(item.getId(), 1, Integer::sum);
             total += item.getPrice();
         }

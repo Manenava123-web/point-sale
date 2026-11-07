@@ -21,7 +21,18 @@ public class ProductoController {
     @RolesAllowed("ADMIN")
     @PostMapping
     public Producto crear(@RequestBody Producto p) {
+        if (p.getName() == null || p.getName().isBlank())
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST, "El nombre es obligatorio");
+        validarCosto(p.getSupplierPrice(), p.getUtilityPercent());
         return s.crear(p);
+    }
+
+    @RolesAllowed("ADMIN")
+    @PutMapping("/{id}/precio")
+    public Producto actualizarPrecio(@PathVariable String id, @RequestBody Producto p) {
+        validarCosto(p.getSupplierPrice(), p.getUtilityPercent());
+        return s.actualizarPrecio(id, p.getSupplierPrice(), p.getUtilityPercent());
     }
 
     @GetMapping
@@ -39,6 +50,17 @@ public class ProductoController {
         if (stock == null || stock < 0) throw new org.springframework.web.server.ResponseStatusException(
                 org.springframework.http.HttpStatus.BAD_REQUEST, "El stock debe ser 0 o mayor");
         return s.actualizarStock(id, stock);
+    }
+
+    private void validarCosto(double supplier, double utility) {
+        if (Double.isNaN(supplier) || Double.isInfinite(supplier) || supplier < 0)
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST,
+                    "El precio del proveedor no puede ser negativo");
+        if (Double.isNaN(utility) || Double.isInfinite(utility) || utility < 0)
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.BAD_REQUEST,
+                    "La utilidad porcentual no puede ser negativa");
     }
 
     @GetMapping("/{code}")

@@ -3,23 +3,80 @@ let prodPage   = 0;
 let prodSearch = "";
 let prodSearchTimer;
 let surtirId   = null;
+let editId     = null;
+const productosPorId = {};
+
+function precioVenta(costo, porcentaje) {
+    const precio = Math.max(0, costo) * (1 + porcentaje / 100);
+    return Math.round((precio + Number.EPSILON) * 100) / 100;
+}
+
+function formatoDinero(n) {
+    return Number(n || 0).toLocaleString("es-MX",
+        { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+function formatoPct(n) {
+    return Number(n || 0).toLocaleString("es-MX",
+        { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + "%";
+}
+
+function tieneDesglose(p) {
+    return (Number(p.supplierPrice) > 0) || (Number(p.utilityPercent) !== 0);
+}
+
+function leerPrecio(supplierId, utilityId, priceId, utilId) {
+    const costo = parseFloat(document.getElementById(supplierId).value);
+    const pct   = parseFloat(document.getElementById(utilityId).value);
+    const priceEl = document.getElementById(priceId);
+    const utilEl  = document.getElementById(utilId);
+    if (isNaN(costo) || costo < 0 || isNaN(pct) || pct < 0) {
+        priceEl.textContent = "$0.00";
+        utilEl.textContent  = "Utilidad: $0.00";
+        return null;
+    }
+    const precio   = precioVenta(costo, pct);
+    const utilidad = Math.round((precio - costo + Number.EPSILON) * 100) / 100;
+    priceEl.textContent = "$" + formatoDinero(precio);
+    utilEl.textContent  = "Utilidad: $" + formatoDinero(utilidad);
+    return { costo, pct, precio, utilidad };
+}
+
+function recalcularPrecioFormulario() {
+    leerPrecio("psupplier", "putility", "pprice", "pprice-util");
+}
+
+function recalcularPrecioEdicion() {
+    leerPrecio("edit-supplier", "edit-utility", "edit-price", "edit-util");
+}
 
 /* ── Guardar producto ────────────────────────────────────────── */
 function saveProduct() {
-    const name  = document.getElementById("pname").value.trim();
-    const code  = document.getElementById("pcode").value.trim();
-    const price = parseFloat(document.getElementById("pprice").value);
+    const name = document.getElementById("pname").value.trim();
+    const code = document.getElementById("pcode").value.trim();
+    const calc = leerPrecio("psupplier", "putility", "pprice", "pprice-util");
 
-    if (!name || isNaN(price)) return;
+    if (!name || !calc) {
+        if (window.showToast) showToast("Captura nombre, precio del proveedor y utilidad %", "error");
+        return;
+    }
 
     confirmar(
         "Guardar producto",
-        '¿Deseas guardar el producto "' + name + '" con precio $' + price.toFixed(2) + '?',
+        '¿Deseas guardar "' + name + '"? Precio de venta $' + calc.precio.toFixed(2)
+            + " (proveedor $" + calc.costo.toFixed(2) + " + " + calc.pct + "%).",
         function() {
-            apiPost("/products", { name, code, price }, () => {
-                document.getElementById("pname").value  = "";
-                document.getElementById("pcode").value  = "";
-                document.getElementById("pprice").value = "";
+            apiPost("/products", {
+                name,
+                code,
+                supplierPrice: calc.costo,
+                utilityPercent: calc.pct
+            }, () => {
+                document.getElementById("pname").value = "";
+                document.getElementById("pcode").value = "";
+                document.getElementById("psupplier").value = "";
+                document.getElementById("putility").value = "";
+                recalcularPrecioFormulario();
                 if (window.showToast) showToast("Producto guardado");
                 prodPage = 0;
                 loadProducts();
@@ -67,8 +124,12 @@ function renderProducts(data) {
     const list = data.content || [];
 
     list.forEach(p => {
-        const price = parseFloat(p.price).toLocaleString("es-MX",
-            { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        productosPorId[p.id] = p;
+        const price = formatoDinero(p.price);
+        const desglose = tieneDesglose(p);
+        const costo = desglose ? "$" + formatoDinero(p.supplierPrice) : "—";
+        const pct   = desglose ? formatoPct(p.utilityPercent) : "—";
+        const util  = desglose ? "$" + formatoDinero(Number(p.price) - Number(p.supplierPrice)) : "—";
 
         const stockColor = p.stock <= 5
             ? "color:#f85149;"
@@ -83,8 +144,16 @@ function renderProducts(data) {
             <td class="text-center">
               <span style="font-size:.82rem;font-weight:600;${stockColor}">${p.stock}</span>
             </td>
-            <td class="text-end">$${price}</td>
-            <td class="text-center">
+            <td class="text-end">${costo}</td>
+            <td class="text-end">${pct}</td>
+            <td class="text-end">${util}</td>
+            <td class="text-end" style="font-weight:600;">$${price}</td>
+            <td class="text-center" style="white-space:nowrap;">
+              <button class="btn btn-outline-secondary btn-sm"
+                      style="padding:.2rem .5rem;font-size:.75rem;"
+                      onclick="abrirEditar('${p.id}')">
+                <i class="bi bi-pencil"></i>
+              </button>
               <button class="btn btn-outline-secondary btn-sm"
                       style="padding:.2rem .55rem;font-size:.75rem;"
                       onclick='abrirSurtir("${p.id}","${p.name.replace(/'/g,"\\'")}",${p.stock})'>
@@ -192,6 +261,52 @@ function abrirSurtir(id, nombre, stockActual) {
 function cerrarSurtir() {
     document.getElementById("modal-surtir").style.display = "none";
     surtirId = null;
+}
+
+/* ── Modal editar precio ────────────────────────────────────── */
+function abrirEditar(id) {
+    const p = productosPorId[id];
+    if (!p) return;
+    editId = id;
+    const conocido = tieneDesglose(p);
+    document.getElementById("edit-nombre").textContent = p.name;
+    document.getElementById("edit-supplier").value = conocido ? p.supplierPrice : (p.price || 0);
+    document.getElementById("edit-utility").value  = conocido ? p.utilityPercent : 0;
+    recalcularPrecioEdicion();
+    document.getElementById("modal-editar").style.display = "block";
+    const input = document.getElementById("edit-supplier");
+    setTimeout(() => { input.focus(); input.select(); }, 50);
+}
+
+function cerrarEditar() {
+    document.getElementById("modal-editar").style.display = "none";
+    editId = null;
+}
+
+function confirmarEditar() {
+    const calc = leerPrecio("edit-supplier", "edit-utility", "edit-price", "edit-util");
+    if (!editId || !calc) {
+        if (window.showToast) showToast("Captura el precio del proveedor y la utilidad %", "error");
+        return;
+    }
+    const id = editId;
+    const nombre = document.getElementById("edit-nombre").textContent;
+    cerrarEditar();
+
+    confirmar(
+        "Actualizar precio",
+        '¿Confirmas el precio de "' + nombre + '" en $' + calc.precio.toFixed(2)
+            + "? Proveedor $" + calc.costo.toFixed(2) + " y utilidad " + calc.pct + "%.",
+        function() {
+            apiPut("/products/" + id + "/precio", {
+                supplierPrice: calc.costo,
+                utilityPercent: calc.pct
+            }, () => {
+                if (window.showToast) showToast("Precio actualizado");
+                loadProducts();
+            });
+        }
+    );
 }
 
 function confirmarSurtir() {

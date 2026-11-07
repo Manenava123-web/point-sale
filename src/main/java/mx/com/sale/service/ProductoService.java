@@ -19,6 +19,9 @@ public class ProductoService {
     final ProductoRepository repo;
 
     public Producto crear(Producto p) {
+        if (p.getName() != null) p.setName(p.getName().trim());
+        if (p.getCode() != null) p.setCode(p.getCode().trim());
+        p.aplicarPrecioCalculado();
         return repo.save(p);
     }
 
@@ -57,6 +60,25 @@ public class ProductoService {
 
     public List<Producto> bajoStock(int umbral) {
         return repo.findByStockLessThanEqualOrderByStockAsc(umbral);
+    }
+
+    /** Copia costo y utilidad del catálogo al ítem vendido, para el desglose histórico. */
+    public void copiarCostoAlItem(Producto item) {
+        if (item == null || item.getId() == null || item.getId().isBlank()) return;
+        repo.findById(item.getId()).ifPresent(cat -> {
+            item.setSupplierPrice(cat.getSupplierPrice());
+            item.setUtilityPercent(cat.getUtilityPercent());
+        });
+    }
+
+    @Transactional
+    public Producto actualizarPrecio(String id, double supplierPrice, double utilityPercent) {
+        Producto p = repo.findById(id)
+                .orElseThrow(() -> new jakarta.persistence.EntityNotFoundException(id));
+        p.setSupplierPrice(supplierPrice);
+        p.setUtilityPercent(utilityPercent);
+        p.aplicarPrecioCalculado();
+        return repo.save(p);
     }
 
     @Transactional

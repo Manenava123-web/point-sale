@@ -45,6 +45,12 @@
     <button id="nav-pos"      onclick="loadView('pos')"      class="sidebar-item">
       <i class="bi bi-cart3"></i><span>Venta</span>
     </button>
+    <button id="nav-prestamos" onclick="loadView('prestamos')" class="sidebar-item">
+      <i class="bi bi-cash-stack"></i><span>Préstamos</span>
+    </button>
+    <button id="nav-facturas" onclick="loadView('facturas')" class="sidebar-item">
+      <i class="bi bi-file-earmark-text"></i><span>Facturas</span>
+    </button>
     <button id="nav-products" onclick="loadView('products')" class="sidebar-item">
       <i class="bi bi-box-seam"></i><span>Productos</span>
     </button>
@@ -111,8 +117,10 @@
 <script th:src="@{/js/ventas.js}"></script>
 <script th:src="@{/js/users.js}"></script>
 <script th:src="@{/js/pos.js}"></script>
+<script th:src="@{/js/prestamos.js}"></script>
+<script th:src="@{/js/facturas.js}"></script>
 <script>
-const NAV_VIEWS = ['dashboard','pos','products','ventas','users','reports'];
+const NAV_VIEWS = ['dashboard','pos','products','ventas','users','reports','prestamos','facturas'];
 const viewLoaded = {};
 
 function toggleSidebar() {
@@ -150,8 +158,12 @@ function loadView(v) {
       if (v === 'users')     typeof loadUsers     === 'function' && loadUsers();
       if (v === 'pos')       typeof initPos       === 'function' && initPos();
       if (v === 'reports')   typeof initReports   === 'function' && initReports();
+      if (v === 'prestamos') typeof loadPrestamos === 'function' && loadPrestamos();
+      if (v === 'facturas')  typeof loadFacturas  === 'function' && loadFacturas(0);
     });
   } else {
+    if (v === 'prestamos') typeof loadPrestamos === 'function' && loadPrestamos();
+    if (v === 'facturas')  typeof loadFacturas  === 'function' && loadFacturas();
     if (v === 'pos') {
       const codeInput = document.getElementById('code');
       if (codeInput) { codeInput.value = ''; codeInput.focus(); }

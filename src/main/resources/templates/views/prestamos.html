@@ -1,0 +1,95 @@
+<div style="max-width:1100px;margin:0 auto;">
+
+  <div style="display:flex;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem;">
+    <div class="card" style="flex:1;min-width:180px;padding:.9rem 1rem;">
+      <div style="font-size:.75rem;color:var(--text-subtle);">Por devolver</div>
+      <div id="prestamo-por-devolver" style="font-size:1.3rem;font-weight:700;color:var(--warning);">$0.00</div>
+    </div>
+    <div class="card" style="flex:1;min-width:180px;padding:.9rem 1rem;">
+      <div style="font-size:.75rem;color:var(--text-subtle);">Prestado hoy</div>
+      <div id="prestamo-hoy" style="font-size:1.3rem;font-weight:700;">$0.00</div>
+    </div>
+    <div class="card" style="flex:1;min-width:180px;padding:.9rem 1rem;">
+      <div style="font-size:.75rem;color:var(--text-subtle);">Dinero devuelto hoy</div>
+      <div id="prestamo-devuelto-hoy" style="font-size:1.3rem;font-weight:700;color:var(--accent-hover);">$0.00</div>
+    </div>
+  </div>
+
+  <div class="row g-3">
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-header-custom">
+          <div class="header-icon" style="background:rgba(210,153,34,.15);color:var(--warning);">
+            <i class="bi bi-cash-stack"></i>
+          </div>
+          <h4>Nuevo préstamo</h4>
+        </div>
+        <div class="p-3">
+          <div class="mb-3">
+            <label class="form-label" for="prestamo-persona">Quién retira</label>
+            <input id="prestamo-persona" type="text" class="form-control" maxlength="80"
+                   placeholder="Cajero o dueño">
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="prestamo-monto">Monto</label>
+            <div class="input-group">
+              <span class="input-group-text">$</span>
+              <input id="prestamo-monto" type="number" min="0.01" step="0.01" class="form-control"
+                     placeholder="0.00">
+            </div>
+          </div>
+          <div class="mb-3">
+            <label class="form-label" for="prestamo-concepto">Concepto</label>
+            <input id="prestamo-concepto" type="text" class="form-control" maxlength="200"
+                   placeholder="Opcional"
+                   onkeydown="if(event.key==='Enter')guardarPrestamo()">
+          </div>
+          <p style="font-size:.75rem;color:var(--text-subtle);margin-bottom:1rem;">
+            El monto sale de la caja y entra al corte de hoy. Al devolverlo, el corte de ese día lo muestra como dinero devuelto.
+          </p>
+          <button onclick="guardarPrestamo()" class="btn btn-primary w-100">
+            <i class="bi bi-box-arrow-up me-1"></i>Registrar préstamo
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-header-custom">
+          <div class="header-icon" style="background:rgba(56,139,253,.12);color:var(--info);">
+            <i class="bi bi-list-ul"></i>
+          </div>
+          <h4>Movimientos</h4>
+          <span id="prestamos-count" class="ms-auto text-subtle" style="font-size:.8rem;"></span>
+        </div>
+
+        <div id="prestamos-loading" class="text-center py-4" style="display:none;">
+          <span class="spinner-border spinner-border-sm me-2" style="color:var(--text-subtle);"></span>
+          <span style="font-size:.85rem;color:var(--text-subtle);">Cargando…</span>
+        </div>
+
+        <div id="prestamos-table-wrap" style="overflow-x:auto;display:none;">
+          <table class="table mb-0" style="font-size:.82rem;">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Persona</th>
+                <th>Concepto</th>
+                <th class="text-end">Monto</th>
+                <th class="text-center">Estado</th>
+                <th class="text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody id="prestamos-list"></tbody>
+          </table>
+        </div>
+
+        <div id="prestamos-empty" class="empty-cart" style="display:none;">
+          <div class="empty-icon"><i class="bi bi-cash"></i></div>
+          <div style="font-size:.85rem;">Sin préstamos registrados</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

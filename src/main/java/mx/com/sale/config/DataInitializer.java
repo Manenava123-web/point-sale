@@ -92,12 +92,19 @@ public class DataInitializer implements ApplicationRunner {
         };
 
         return Arrays.stream(data)
-                .map(row -> ps.crear(new Producto(
-                        null,
-                        (String) row[1],
-                        ((Number) row[2]).doubleValue(),
-                        (String) row[0],
-                        (int) row[3])))
+                .map(row -> {
+                    double venta = ((Number) row[2]).doubleValue();
+                    double utilidad = 25d;
+                    double costo = Producto.costoDesdePrecio(venta, utilidad);
+                    return ps.crear(new Producto(
+                            null,
+                            (String) row[1],
+                            0,
+                            (String) row[0],
+                            (int) row[3],
+                            costo,
+                            utilidad));
+                })
                 .toList();
     }
 

@@ -1,7 +1,7 @@
-<div class="row g-3" style="max-width:960px;margin:0 auto;">
+<div class="row g-3" style="max-width:1180px;margin:0 auto;">
 
   <!-- Left: form -->
-  <div class="col-md-4">
+  <div class="col-xl-3">
     <div class="card">
       <div class="card-header-custom">
         <div class="header-icon" style="background:rgba(210,153,34,.15);color:var(--warning);">
@@ -18,11 +18,31 @@
           <label class="form-label" for="pcode">Código</label>
           <input id="pcode" type="text" class="form-control" placeholder="Código o clave">
         </div>
-        <div class="mb-4">
-          <label class="form-label" for="pprice">Precio</label>
+        <div class="mb-3">
+          <label class="form-label" for="psupplier">Precio del proveedor</label>
           <div class="input-group">
             <span class="input-group-text">$</span>
-            <input id="pprice" type="number" min="0" step="0.01" class="form-control" placeholder="0.00">
+            <input id="psupplier" type="number" min="0" step="0.01" class="form-control"
+                   placeholder="0.00" oninput="recalcularPrecioFormulario()">
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label" for="putility">Utilidad porcentual %</label>
+          <div class="input-group">
+            <input id="putility" type="number" min="0" step="0.01" class="form-control"
+                   placeholder="0.00" oninput="recalcularPrecioFormulario()">
+            <span class="input-group-text">%</span>
+          </div>
+        </div>
+        <div class="mb-4">
+          <label class="form-label">Precio</label>
+          <div id="pprice" style="border:1px solid var(--border);border-radius:6px;padding:.45rem .75rem;
+               background:var(--surface-2);font-weight:700;font-size:1.05rem;">$0.00</div>
+          <div id="pprice-util" style="font-size:.75rem;color:var(--text-subtle);margin-top:.35rem;">
+            Utilidad: $0.00
+          </div>
+          <div style="font-size:.72rem;color:var(--text-subtle);margin-top:.2rem;">
+            Precio = proveedor × (1 + utilidad %)
           </div>
         </div>
         <button onclick="saveProduct()" class="btn btn-primary w-100">
@@ -33,7 +53,7 @@
   </div>
 
   <!-- Right: list -->
-  <div class="col-md-8">
+  <div class="col-xl-9">
     <div class="card">
       <div class="card-header-custom">
         <div class="header-icon" style="background:rgba(210,153,34,.15);color:var(--warning);">
@@ -62,12 +82,15 @@
 
       <!-- Tabla -->
       <div id="prod-table-wrap" style="overflow-x:auto;display:none;">
-        <table class="table mb-0">
+        <table class="table mb-0" style="font-size:.82rem;">
           <thead>
             <tr>
               <th>Nombre</th>
               <th>Código</th>
               <th class="text-center">Stock</th>
+              <th class="text-end">P. proveedor</th>
+              <th class="text-end">Utilidad %</th>
+              <th class="text-end">Utilidad $</th>
               <th class="text-end">Precio</th>
               <th class="text-center">Acciones</th>
             </tr>
@@ -125,6 +148,53 @@
       <button onclick="cerrarSurtir()" class="btn btn-outline-secondary btn-sm">Cancelar</button>
       <button onclick="confirmarSurtir()" class="btn btn-primary btn-sm">
         <i class="bi bi-check-lg me-1"></i>Confirmar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal editar precio -->
+<div id="modal-editar" style="display:none;position:fixed;inset:0;z-index:1050;background:rgba(0,0,0,.55);"
+     onclick="if(event.target===this)cerrarEditar()">
+  <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+              width:100%;max-width:400px;background:var(--surface);
+              border:1px solid var(--border);border-radius:var(--radius);
+              box-shadow:var(--shadow);padding:1.5rem;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+      <h5 style="margin:0;font-size:1rem;">
+        <i class="bi bi-pencil me-2" style="color:var(--warning);"></i>Editar precio
+      </h5>
+      <button onclick="cerrarEditar()" style="background:none;border:none;color:var(--text-muted);
+              font-size:1.2rem;cursor:pointer;line-height:1;padding:.1rem .3rem;">&times;</button>
+    </div>
+    <p id="edit-nombre" style="font-size:.9rem;font-weight:600;margin-bottom:1rem;"></p>
+    <div class="mb-3">
+      <label class="form-label" for="edit-supplier">Precio del proveedor</label>
+      <div class="input-group">
+        <span class="input-group-text">$</span>
+        <input id="edit-supplier" type="number" min="0" step="0.01" class="form-control"
+               oninput="recalcularPrecioEdicion()">
+      </div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label" for="edit-utility">Utilidad porcentual %</label>
+      <div class="input-group">
+        <input id="edit-utility" type="number" min="0" step="0.01" class="form-control"
+               oninput="recalcularPrecioEdicion()"
+               onkeydown="if(event.key==='Enter')confirmarEditar()">
+        <span class="input-group-text">%</span>
+      </div>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Precio</label>
+      <div id="edit-price" style="border:1px solid var(--border);border-radius:6px;padding:.45rem .75rem;
+           background:var(--surface-2);font-weight:700;">$0.00</div>
+      <div id="edit-util" style="font-size:.75rem;color:var(--text-subtle);margin-top:.35rem;">Utilidad: $0.00</div>
+    </div>
+    <div style="display:flex;gap:.5rem;justify-content:flex-end;">
+      <button onclick="cerrarEditar()" class="btn btn-outline-secondary btn-sm">Cancelar</button>
+      <button onclick="confirmarEditar()" class="btn btn-primary btn-sm">
+        <i class="bi bi-check-lg me-1"></i>Guardar
       </button>
     </div>
   </div>

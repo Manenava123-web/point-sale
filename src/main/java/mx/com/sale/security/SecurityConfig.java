@@ -21,7 +21,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/views/**", "/actuator/**").permitAll()
                 .requestMatchers("/login", "/auth/login").permitAll()
-                .requestMatchers("/index", "/auth/me", "/products/**", "/sales/**", "/reports/**", "/users/**", "/config/**", "/dashboard/**").authenticated()
+                .requestMatchers("/index", "/auth/me", "/products/**", "/sales/**", "/reports/**", "/users/**", "/prestamos/**", "/facturas/**", "/config/**", "/dashboard/**").authenticated()
                 .anyRequest().authenticated())
             .exceptionHandling(ex -> ex
                 .authenticationEntryPoint((req, res, e) -> {
